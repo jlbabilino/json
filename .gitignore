@@ -1,8 +1,13 @@
 # Ignore Gradle project-specific cache directory
 .gradle
 
+# Ignore VS code stuff
+
+.settings
+
 # Ignore Gradle build output directory
 build
+lib/.settings
 
 # Ignore example code because it isn't ready
 src/main/java/com/jlbabilino/json/examples
