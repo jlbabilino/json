@@ -1,0 +1,195 @@
+/*
+ * Copyright (C) 2021 Justin Babilino
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package com.jlbabilino.json;
+
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+/**
+ * This {@code JSONEntry} holds an array of {@code JSONEntry} types. It is
+ * equivalent to the square bracket [a, b, c,...] array structure in a JSON.
+ * JSON arrays can hold strings, numbers, booleans, objects, and other arrays.
+ * These arrays do not check for types, meaning that multiple types can be in
+ * the same array simultaneously, unlike Java arrays which must have values of
+ * the same types.
+ *
+ * @see JSONEntry
+ * @see JSONObject
+ * @author Justin Babilino
+ */
+public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
+
+    /**
+     * The array of entries in the array
+     */
+    private final JSONEntry[] array;
+
+    /**
+     * Constructs an <code>ArrayJSONEntry</code> with an array of entries.
+     *
+     * @param array array of <code>JSONEntries</code>
+     */
+    public JSONArray(JSONEntry[] array) {
+        this.array = array;
+    }
+
+    /**
+     * Returns the array of JSON entries in this JSON array. This method is
+     * package-private because returning this array would allow the user to modify
+     * the array even though this type is meant to be immutable.
+     * 
+     * @return the array of JSON entries
+     */
+    JSONEntry[] getArray() {
+        return array;
+    }
+
+    /**
+     * Retrieves the {@link JSONEntry} at the index provided, if the index is in
+     * bounds for the {@code JSONArray}.
+     * 
+     * @param index the index to retrieve the {@code JSONEntry} from in the array
+     * @return the {@code JSONEntry} at the index provided in the array
+     * @throws ArrayIndexOutOfBoundsException if the provided index is out of bounds
+     */
+    public JSONEntry get(int index) throws ArrayIndexOutOfBoundsException {
+        if (index < 0 || index >= array.length) {
+            throw new ArrayIndexOutOfBoundsException(
+                    "Index " + index + " out of bounds for JSON array of length " + array.length + ".");
+        }
+        return array[index];
+    }
+
+    /**
+     * Returns the length of this JSON array.
+     * 
+     * @return the length of this JSON array
+     */
+    public int length() {
+        return array.length;
+    }
+
+    /**
+     * Returns a new {@link Iterator} that allows this JSON array to be iterated on.
+     * Each call to this method returns a new iterator instance.
+     * 
+     * @return the new iterator
+     */
+    @Override
+    public Iterator<JSONEntry> iterator() {
+        return new JSONArrayIterator();
+    }
+
+    /**
+     * This inner class is used by the {@code iterator()} method to generate
+     * iterators.
+     */
+    private class JSONArrayIterator implements Iterator<JSONEntry> {
+
+        /**
+         * The current index of this iterator
+         */
+        private int index;
+
+        /**
+         * Constructs a {@code JSONArrayIterator} for iteration over JSON arrays.
+         */
+        private JSONArrayIterator() {
+            index = 0;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return index < array.length - 1;
+        }
+
+        @Override
+        public JSONEntry next() throws NoSuchElementException {
+            if (hasNext()) {
+                return array[++index];
+            } else {
+                throw new NoSuchElementException("No more JSONEntry elements availible in iterator.");
+            }
+        }
+    }
+
+    @Override
+    public boolean isArray() {
+        return true;
+    }
+
+    @Override
+    public JSONType getType() {
+        return JSONType.ARRAY;
+    }
+
+    @Override
+    public String getJSONText(int indentLevel, JSONFormat format) {
+        if (array.length == 0) {
+            return "[]"; // if nothing in array just spit this out
+        }
+
+        StringBuilder indentBlock = new StringBuilder();
+        for (int i = 0; i < format.getIndentSpaces().spaces; i++) {
+            indentBlock.append(" "); // build the indent block with the correct amount of spaces from the format
+        }
+        StringBuilder shortIndentBlock = new StringBuilder(); // this block is for the indent level that the array
+                                                              // itself is on
+        for (int i = 0; i < indentLevel; i++) {
+            shortIndentBlock.append(indentBlock);
+        }
+        String longIndentBlock = shortIndentBlock.toString() + indentBlock.toString(); // this block is for the indent
+                                                                                       // level that the array items are
+                                                                                       // on
+
+        StringBuilder str = new StringBuilder(); // the JSON text string we are building
+
+        if (format.getArrayBeginOnNewline().value && indentLevel != 0) { // if this is the root entry (indent level is
+                                                                         // 0) then don't enter down no matter what
+            str.append(System.lineSeparator()).append(shortIndentBlock); // if the array should begin on a new line, add
+                                                                         // a newline and short indent
+        }
+        str.append("["); // begin array
+
+        String strBetweenItems; // this string goes after the comma and before the next item in arrays. It
+                                // changes depending on the format
+        if (format.getArrayNewlinePerItem().value) {
+            strBetweenItems = System.lineSeparator() + longIndentBlock; // if there should be newlines between items,
+                                                                        // modify strBetweenItms
+            str.append(strBetweenItems);
+        } else {
+            strBetweenItems = " "; // we don't append anything here so there isn't a random space between the open
+                                   // bracket and first item (like this: [ "test", 1])
+        }
+
+        str.append(array[0].getJSONText(indentLevel + 1, format)); // add the first item
+        for (int i = 1; i < array.length; i++) {
+            str.append(",").append(strBetweenItems).append(array[i].getJSONText(indentLevel + 1, format)); // add comma,
+                                                                                                           // strBetweenItems,
+                                                                                                           // and next
+                                                                                                           // item
+        }
+
+        if (format.getArrayNewlinePerItem().value) {
+            str.append(System.lineSeparator()).append(shortIndentBlock); // only place close bracket ] on newline if
+                                                                         // each item has been on a new line
+        }
+        str.append("]"); // add final newline and close bracket ]
+
+        return str.toString();
+    }
+}
