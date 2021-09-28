@@ -12,6 +12,18 @@ plugins {
     id 'maven-publish'
 }
 
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = 'com.jlbabilino'
+            artifactId = 'json'
+            version = '0.0.3'
+
+            from components.java
+        }
+    }
+}
+
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
