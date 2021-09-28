@@ -11,7 +11,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
 }
-
+// Thanks to GitHub user selijabali on https://github.com/jitpack/jitpack.io/issues/3814 for solving this error!!
 publishing {
     publications {
         mavenJava(MavenPublication) {
