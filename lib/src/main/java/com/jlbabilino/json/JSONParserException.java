@@ -22,7 +22,7 @@ package com.jlbabilino.json;
  *
  * @author Justin Babilino
  */
-public class JSONParserException extends Exception {
+public class JSONParserException extends RuntimeException {
 
     /**
      * Constructs a <code>JSONNParserException</code> with a message to be
