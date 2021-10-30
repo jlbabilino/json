@@ -39,7 +39,7 @@ public interface JSONFormatOption {
     }
 
     /**
-     * This enum changes whether or not each array item begins on a new line.
+     * This enum changes whether or not each JSON array item begins on a new line.
      */
     public static enum ArrayNewlinePerItem implements JSONFormatOption {
 
@@ -53,8 +53,8 @@ public interface JSONFormatOption {
     }
 
     /**
-     * This enum changes whether or not the initial array declaration begins on a
-     * new line.
+     * This enum changes whether or not the initial JSON array declaration (opening
+     * square bracket '[') begins on a new line.
      */
     public static enum ArrayBeginOnNewline implements JSONFormatOption {
 
@@ -68,7 +68,8 @@ public interface JSONFormatOption {
     }
 
     /**
-     * This enum changes whether or not each keyed entry begins on a new line.
+     * This enum changes whether or not each keyed entry of a JSON object begins on
+     * a new line.
      */
     public static enum ObjectNewlinePerItem implements JSONFormatOption {
 
@@ -82,8 +83,8 @@ public interface JSONFormatOption {
     }
 
     /**
-     * This enum changes whether or not the initial object declaration begins on a
-     * new line.
+     * This enum changes whether or not the initial JSON object declaration (opening
+     * curly brace '{') begins on a new line.
      */
     public static enum ObjectBeginOnNewline implements JSONFormatOption {
 

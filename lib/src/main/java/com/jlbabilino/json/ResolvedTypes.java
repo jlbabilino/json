@@ -11,16 +11,28 @@ final class ResolvedTypes {
     private ResolvedTypes() {
     }
 
+    /**
+     * Gets the underlying {@link Class} type from a {@link Type}. For exmaple, if a
+     * {@link ParameterizedType} of List<Integer> were passed in, List.class would
+     * be returned. If wildcard type is passed in, the resovled class of the upper
+     * bound is returned. Of all Java implementations of {@code Type}, only
+     * {@link TypeVariable} cannot be resolved to a {@code Class}. For these cases,
+     * this method returns {@code null} because this cannot happen in any use of
+     * this method in this library, and this method is not public.
+     * 
+     * @param type the type to be resolved to a {@code Class}
+     * @return the resolved {@code Class}
+     */
     static Class<?> resolveClass(Type type) {
         Class<?> resolvedClass;
         if (type instanceof GenericArrayType) {
-            resolvedClass = resolveClass(((GenericArrayType) type).getGenericComponentType())
-                    .arrayType();
+            resolvedClass = resolveClass(((GenericArrayType) type).getGenericComponentType()).arrayType();
         } else if (type instanceof ParameterizedType) {
             resolvedClass = (Class<?>) ((ParameterizedType) type).getRawType();
-        // not checking type variables, should be resolved before using this method
+            // not checking type variables, should be resolved before using this method
         } else if (type instanceof WildcardType) {
-            // note if there are no specified upper bounds, upper bound index 0 will be Object
+            // note if there are no specified upper bounds, upper bound index 0 will be
+            // Object
             resolvedClass = resolveClass(((WildcardType) type).getUpperBounds()[0]);
         } else if (type instanceof Class<?>) {
             resolvedClass = (Class<?>) type;
@@ -138,6 +150,7 @@ final class ResolvedTypes {
             return false;
         }
     }
+
     private static boolean isResolved(Type... types) {
         for (Type type : types) {
             if (!isResolved(type)) {

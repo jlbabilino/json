@@ -25,10 +25,25 @@ package com.jlbabilino.json;
 public class JSONFormat {
 
     // These options are set with default settings that can be overwritten later
+    /**
+     * Holds the value for indentSpaces
+     */
     private JSONFormatOption.IndentSpaces indentSpaces = JSONFormatOption.IndentSpaces.FOUR;
+    /**
+     * Holds the value for arrayNewlinePerItem
+     */
     private JSONFormatOption.ArrayNewlinePerItem arrayNewlinePerItem = JSONFormatOption.ArrayNewlinePerItem.TRUE;
+    /**
+     * Holds the value for arrayBeginOnNewLine
+     */
     private JSONFormatOption.ArrayBeginOnNewline arrayBeginOnNewline = JSONFormatOption.ArrayBeginOnNewline.FALSE;
+    /**
+     * Holds the value for objectNewlinePerItem
+     */
     private JSONFormatOption.ObjectNewlinePerItem objectNewlinePerItem = JSONFormatOption.ObjectNewlinePerItem.TRUE;
+    /**
+     * Holds the value for objectBeginOnNewline
+     */
     private JSONFormatOption.ObjectBeginOnNewline objectBeginOnNewline = JSONFormatOption.ObjectBeginOnNewline.FALSE;
 
     /**

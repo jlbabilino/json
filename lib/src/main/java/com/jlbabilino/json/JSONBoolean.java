@@ -50,16 +50,37 @@ public class JSONBoolean extends JSONEntry {
         return value;
     }
 
+    /**
+     * Returns {@code true} since this entry is a boolean.
+     * 
+     * @return {@code true}
+     */
     @Override
     public boolean isBoolean() {
         return true;
     }
 
+    /**
+     * Returns {@code JSONType.BOOLEAN} since this entry is a boolean.
+     * 
+     * @return {@code JSONType.BOOLEAN}
+     */
     @Override
     public JSONType getType() {
         return JSONType.BOOLEAN;
     }
 
+    /**
+     * Generates a {@code String} that represents this JSON boolean. If this entry contains a {@code true} value,
+     * then returns "true", otherwise returns "false". It is equivalent to
+     * <pre>
+     * Boolean.toString(getBoolean())
+     * </pre>
+     *
+     * @param indentLevel this parameter has no effect on the result or effect of this implementation of this method.
+     * @param format this parameter has no effect on the result or effect of this implementation of this method.
+     * @return a {@code String} representing this JSON boolean.
+     */
     @Override
     public String getJSONText(int indentLevel, JSONFormat format) {
         return Boolean.toString(value);

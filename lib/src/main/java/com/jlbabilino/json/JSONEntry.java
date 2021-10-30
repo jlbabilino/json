@@ -24,8 +24,7 @@ package com.jlbabilino.json;
  * 
  * <p>
  * Here's an example: This is an example JSON file that could be imported into
- * this system:
- * <code>
+ * this system: <code>
  * <br>{
  * <br>&nbsp;&nbsp;&nbsp; "people": [{
  * <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "name": "Justin",
@@ -45,6 +44,7 @@ package com.jlbabilino.json;
  * Retrieving the name of the first person:
  * 
  * <p>
+ * 
  * <pre>
  * JSONObject rootObject = (JSONObject) entry;
  * JSONArray peopleArray = (JSONArray) rootObject.get("people");
@@ -57,6 +57,7 @@ package com.jlbabilino.json;
  * Let's break this down:
  * 
  * <p>
+ * 
  * <pre>
  * JSONObject rootObject = (JSONObject) entry;
  * </pre>
@@ -66,6 +67,7 @@ package com.jlbabilino.json;
  * key-value pairs can be accessed later.
  * 
  * <p>
+ * 
  * <pre>
  * JSONArray peopleArray = (JSONArray) rootObject.get("people");
  * </pre>
@@ -75,6 +77,7 @@ package com.jlbabilino.json;
  * it as a {@code JSONArray} so that items can be accessed later.
  * 
  * <p>
+ * 
  * <pre>
  * JSONObject firstPersonObject = (JSONObject) peopleArray.get(0);
  * </pre>
@@ -84,6 +87,7 @@ package com.jlbabilino.json;
  * {@code JSONObject} because that is the type of the array item.
  * 
  * <p>
+ * 
  * <pre>
  * JSONString nameString = (JSONString) firstPersonObject.get("name");
  * </pre>
@@ -93,6 +97,7 @@ package com.jlbabilino.json;
  * {@code JSONString}, since the value is a JSON string.
  * 
  * <p>
+ * 
  * <pre>
  * String firstPersonName = nameString.getString();
  * </pre>
@@ -115,8 +120,7 @@ public abstract class JSONEntry {
     }
 
     /**
-     * Returns {@code true} if this entry is an object, {@code false}
-     * otherwise.
+     * Returns {@code true} if this entry is an object, {@code false} otherwise.
      *
      * @return type check as {@code boolean}
      */
@@ -125,8 +129,7 @@ public abstract class JSONEntry {
     }
 
     /**
-     * Returns {@code true} if this entry is an array, {@code false}
-     * otherwise.
+     * Returns {@code true} if this entry is an array, {@code false} otherwise.
      *
      * @return type check as {@code boolean}
      */
@@ -135,8 +138,7 @@ public abstract class JSONEntry {
     }
 
     /**
-     * Returns {@code true} if this entry is a boolean, {@code false}
-     * otherwise.
+     * Returns {@code true} if this entry is a boolean, {@code false} otherwise.
      *
      * @return type check as {@code boolean}
      */
@@ -145,8 +147,7 @@ public abstract class JSONEntry {
     }
 
     /**
-     * Returns {@code true} if this entry is a number, {@code false}
-     * otherwise.
+     * Returns {@code true} if this entry is a number, {@code false} otherwise.
      *
      * @return type check as {@code boolean}
      */
@@ -155,8 +156,7 @@ public abstract class JSONEntry {
     }
 
     /**
-     * Returns {@code true} if this entry is a string, {@code false}
-     * otherwise.
+     * Returns {@code true} if this entry is a string, {@code false} otherwise.
      *
      * @return type check as {@code boolean}
      */
@@ -165,8 +165,7 @@ public abstract class JSONEntry {
     }
 
     /**
-     * Returns {@code true} if this entry is a null, {@code false}
-     * otherwise.
+     * Returns {@code true} if this entry is a null, {@code false} otherwise.
      *
      * @return type check as {@code boolean}
      */
@@ -185,36 +184,56 @@ public abstract class JSONEntry {
      * Generates a {@code String} that represents this JSON entry as properly spaced
      * and indented JSON text that can be saved to a file.
      *
-     * @param indentLevel the amount of tabs, usually four spaces to place before
-     *                    the string as an indent.
+     * @param indentLevel the amount of levels of indent; used to determine how many
+     *                    spaces to place before text on newlines
      * @param format      formatting data used when generating text
-     * @return a {@code String} representing this JSON entry.
+     * @return a {@code String} representing this JSON entry
      */
     public abstract String getJSONText(int indentLevel, JSONFormat format);
 
+    /**
+     * Package-private method that gives the {@link Class} in this library that
+     * represents a certain {@link JSONType}. For example:
+     * 
+     * <pre>
+     * classForJSONType(JSONType.OBJECT)
+     * </pre>
+     * 
+     * returns
+     * 
+     * <pre>
+     * JSONObject.class
+     * </pre>
+     * 
+     * @param the {@code JSONType}
+     * @return the associated {@code Class}
+     */
     static Class<? extends JSONEntry> classForJSONType(JSONType jsonType) {
         switch (jsonType) {
-            case OBJECT:
-                return JSONObject.class;
-            case ARRAY:
-                return JSONArray.class;
-            case BOOLEAN:
-                return JSONBoolean.class;
-            case NUMBER:
-                return JSONNumber.class;
-            case STRING:
-                return JSONString.class;
-            case NULL:
-                return JSONNull.class;
-            default:
-                return null;
+        case OBJECT:
+            return JSONObject.class;
+        case ARRAY:
+            return JSONArray.class;
+        case BOOLEAN:
+            return JSONBoolean.class;
+        case NUMBER:
+            return JSONNumber.class;
+        case STRING:
+            return JSONString.class;
+        case NULL:
+            return JSONNull.class;
+        default:
+            return null;
         }
     }
 
     /**
-     * Returns a string representation of this {@code JSONEntry}, using the
-     * default format options. This is identical to:
-     * <pre>getJSONText(0, new JSONFormat())</pre>
+     * Returns a string representation of this {@code JSONEntry}, using the default
+     * format options. This is identical to:
+     * 
+     * <pre>
+     * getJSONText(0, new JSONFormat())
+     * </pre>
      *
      * @return this {@code JSONEntry} as a String
      */

@@ -122,21 +122,52 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
             if (hasNext()) {
                 return array[++index];
             } else {
-                throw new NoSuchElementException("No more JSONEntry elements availible in iterator.");
+                throw new NoSuchElementException("No more JSONEntry elements availible in the array.");
             }
         }
     }
 
+    /**
+     * Returns {@code true} since this entry is an array.
+     * 
+     * @return {@code true}
+     */
     @Override
     public boolean isArray() {
         return true;
     }
 
+    /**
+     * Returns {@code JSONType.ARRAY} since this entry is an array.
+     * 
+     * @return {@code JSONType.ARRAY}
+     */
     @Override
     public JSONType getType() {
         return JSONType.ARRAY;
     }
 
+    /**
+     * Generates a {@code String} that represents this JSON array. Creates square
+     * brackets around the array, and places all values in order, separated by
+     * commas. For example, a JSON array could be represented as
+     * <p>
+     * "[1.4, null, "stringy", {"entry": 10}]"
+     * <p>
+     * Format options are availible for this method. There are three options that
+     * will affect the result of this method:
+     * <ol>
+     * <li>{@code indentLevel}: This tells the method which indent level the array
+     * is beginning on. For example, if this was the root JSON entry, then the
+     * indent level would be {@code 0}. If this array was a value associated with a
+     * key in a JSON object that was the root of the JSON, then the indent level
+     * would be {@code 1} because it is one level inside the JSON.
+     * <li>{@code format.indentSpaces}: This will affect the amount of spaces
+     * used when indenting.
+     * <li>{@code format.arrayNewlinePerItem}
+     * <li>{@code format.arrayBeginOnNewline}
+     * </ol>
+     */
     @Override
     public String getJSONText(int indentLevel, JSONFormat format) {
         if (array.length == 0) {

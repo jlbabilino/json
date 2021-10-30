@@ -60,6 +60,15 @@ public class JSON {
         return rootEntry;
     }
 
+    /**
+     * Exports this JSON as a {@code String}. Equivalent to
+     * 
+     * <pre>
+     * exportJSON()
+     * </pre>
+     * 
+     * @return the string representation of this JSON
+     */
     @Override
     public String toString() {
         return exportJSON();
