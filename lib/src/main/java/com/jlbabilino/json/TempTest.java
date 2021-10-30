@@ -53,7 +53,5 @@ public class TempTest<A> {
         } catch (JSONDeserializerException e) {
             System.out.println("DESERIALIZATION ERROR :(");
         }
-
-        
     }
 }
