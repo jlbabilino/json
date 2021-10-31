@@ -82,7 +82,7 @@ public class JSONBoolean extends JSONEntry {
      * @return a {@code String} representing this JSON boolean.
      */
     @Override
-    public String getJSONText(int indentLevel, JSONFormat format) {
+    public String toJSONText(int indentLevel, int jsonFormat) {
         return Boolean.toString(value);
     }
 }

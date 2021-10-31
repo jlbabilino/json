@@ -33,7 +33,7 @@ public class TempTest<A> {
     public static void main(String[] args) {
         TempTest<String> tempTest = new TempTest<>(new String[]{"hi", "how", "are", "you"});
         JSON json = JSONSerializer.serializeJSON(tempTest);
-        String jsonString = json.exportJSON(JSONFormatOption.ArrayNewlinePerItem.FALSE, JSONFormatOption.ArrayBeginOnNewline.FALSE);
+        String jsonString = json.exportJSON(JSONFormat.getFormatCode(4, false, false, false, true, false));
         System.out.println(jsonString);
         if (jsonString.equals("[\"hi\", \"how\", \"are\", \"you\"]")) {
             System.out.println("SERIALIZATION SUCCESSFUL!!");

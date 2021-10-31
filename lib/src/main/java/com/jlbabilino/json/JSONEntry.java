@@ -16,6 +16,8 @@
  */
 package com.jlbabilino.json;
 
+import static com.jlbabilino.json.JSONFormat.DEFAULT_FORMAT_CODE;
+
 /**
  * <p>
  * This abstract class is the super class of every type of entry possible in a
@@ -184,12 +186,35 @@ public abstract class JSONEntry {
      * Generates a {@code String} that represents this JSON entry as properly spaced
      * and indented JSON text that can be saved to a file.
      *
-     * @param indentLevel the amount of levels of indent; used to determine how many
-     *                    spaces to place before text on newlines
-     * @param format      formatting data used when generating text
+     * @param indentLevel the amount of levels of indent; used internally to
+     *                    determine how many spaces to place before text on newlines
+     * @param jsonFormat  formatting data used when generating text (see {@link JSONFormat})
      * @return a {@code String} representing this JSON entry
      */
-    public abstract String getJSONText(int indentLevel, JSONFormat format);
+    public abstract String toJSONText(int indentLevel, int jsonFormat);
+
+    /**
+     * Generates a {@code String} that represents this JSON entry as a properly spaced
+     * and indented JSON text that can be saved to a file. An indent level of {@code 0}
+     * will be used.
+     * 
+     * @param jsonFormat formatting data used when generating text (see {@link JSONFormat})
+     * @return a {@code String} representing this JSON entry
+     */
+    public String toJSONText(int jsonFormat) {
+        return toJSONText(0, jsonFormat);
+    }
+
+    /**
+     * Generates a {@code String} that represents this JSON entry as a properly spaced
+     * and indented JSON text that can be saved to a file. An indent level of {@code 0}
+     * and default format options will be used.
+     * 
+     * @return a {@code String} representing this JSON entry
+     */
+    public String toJSONText() {
+        return toJSONText(DEFAULT_FORMAT_CODE);
+    }
 
     /**
      * Package-private method that gives the {@link Class} in this library that
@@ -205,7 +230,7 @@ public abstract class JSONEntry {
      * JSONObject.class
      * </pre>
      * 
-     * @param the {@code JSONType}
+     * @param jsonType the {@code JSONType}
      * @return the associated {@code Class}
      */
     static Class<? extends JSONEntry> classForJSONType(JSONType jsonType) {
@@ -239,6 +264,6 @@ public abstract class JSONEntry {
      */
     @Override
     public String toString() {
-        return getJSONText(0, new JSONFormat());
+        return toJSONText();
     }
 }

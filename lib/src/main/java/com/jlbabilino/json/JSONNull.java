@@ -59,7 +59,7 @@ public class JSONNull extends JSONEntry {
     }
 
     @Override
-    public String getJSONText(int indentLevel, JSONFormat format) {
+    public String toJSONText(int indentLevel, int jsonFormat) {
         return "null";
     }
 }

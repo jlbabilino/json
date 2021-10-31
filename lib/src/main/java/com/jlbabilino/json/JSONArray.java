@@ -169,15 +169,12 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
      * </ol>
      */
     @Override
-    public String getJSONText(int indentLevel, JSONFormat format) {
+    public String toJSONText(int indentLevel, int jsonFormat) {
         if (array.length == 0) {
             return "[]"; // if nothing in array just spit this out
         }
 
-        StringBuilder indentBlock = new StringBuilder();
-        for (int i = 0; i < format.getIndentSpaces().spaces; i++) {
-            indentBlock.append(" "); // build the indent block with the correct amount of spaces from the format
-        }
+        String indentBlock = JSONFormat.getIndentString(jsonFormat);
         StringBuilder shortIndentBlock = new StringBuilder(); // this block is for the indent level that the array
                                                               // itself is on
         for (int i = 0; i < indentLevel; i++) {
@@ -189,7 +186,7 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
 
         StringBuilder str = new StringBuilder(); // the JSON text string we are building
 
-        if (format.getArrayBeginOnNewline().value && indentLevel != 0) { // if this is the root entry (indent level is
+        if (JSONFormat.getArrayBeginOnNewline(jsonFormat) && indentLevel != 0) { // if this is the root entry (indent level is
                                                                          // 0) then don't enter down no matter what
             str.append(System.lineSeparator()).append(shortIndentBlock); // if the array should begin on a new line, add
                                                                          // a newline and short indent
@@ -198,7 +195,7 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
 
         String strBetweenItems; // this string goes after the comma and before the next item in arrays. It
                                 // changes depending on the format
-        if (format.getArrayNewlinePerItem().value) {
+        if (JSONFormat.getArrayNewlinePerItem(jsonFormat)) {
             strBetweenItems = System.lineSeparator() + longIndentBlock; // if there should be newlines between items,
                                                                         // modify strBetweenItms
             str.append(strBetweenItems);
@@ -207,15 +204,15 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
                                    // bracket and first item (like this: [ "test", 1])
         }
 
-        str.append(array[0].getJSONText(indentLevel + 1, format)); // add the first item
+        str.append(array[0].toJSONText(indentLevel + 1, jsonFormat)); // add the first item
         for (int i = 1; i < array.length; i++) {
-            str.append(",").append(strBetweenItems).append(array[i].getJSONText(indentLevel + 1, format)); // add comma,
+            str.append(",").append(strBetweenItems).append(array[i].toJSONText(indentLevel + 1, jsonFormat)); // add comma,
                                                                                                            // strBetweenItems,
                                                                                                            // and next
                                                                                                            // item
         }
 
-        if (format.getArrayNewlinePerItem().value) {
+        if (JSONFormat.getArrayNewlinePerItem(jsonFormat)) {
             str.append(System.lineSeparator()).append(shortIndentBlock); // only place close bracket ] on newline if
                                                                          // each item has been on a new line
         }

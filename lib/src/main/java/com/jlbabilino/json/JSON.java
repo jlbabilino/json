@@ -40,15 +40,25 @@ public class JSON {
     }
 
     /**
-     * Exports this JSON as a String. This can be saved to a <code>.json</code> file
-     * to be used with other programs and interfaces.
+     * Exports this JSON as a string. This can be saved to a {@code .json} file to
+     * be used with other programs and interfaces.
      *
      * @param options formatting options for JSON exporting
-     * @return exported JSON
+     * @return the exported JSON
      */
-    public String exportJSON(JSONFormatOption... options) {
-        JSONFormat format = new JSONFormat(options);
-        return rootEntry.getJSONText(0, format);
+    public String exportJSON(int jsonFormat) {
+        return rootEntry.toJSONText(jsonFormat);
+    }
+
+    /**
+     * Exports this JSON as a string with the default formatting options (see
+     * {@link JSONFormat}). This can be saved to a {@code .json} file to be used
+     * with other programs and interfaces.
+     * 
+     * @return the exported JSON
+     */
+    public String exportJSON() {
+        return rootEntry.toJSONText();
     }
 
     /**

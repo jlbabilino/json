@@ -119,15 +119,12 @@ public class JSONObject extends JSONEntry {
     }
 
     @Override
-    public String getJSONText(int indentLevel, JSONFormat format) {
+    public String toJSONText(int indentLevel, int jsonFormat) {
         if (map.isEmpty()) {
             return "{}"; // if nothing in map just spit this out
         }
 
-        StringBuilder indentBlock = new StringBuilder();
-        for (int i = 0; i < format.getIndentSpaces().spaces; i++) {
-            indentBlock.append(" ");
-        }
+        String indentBlock = JSONFormat.getIndentString(jsonFormat);
 
         StringBuilder shortIndentBlock = new StringBuilder(); // this block is for the indent level that the object
                                                               // itself is on
@@ -139,7 +136,7 @@ public class JSONObject extends JSONEntry {
                                                                                        // are on
 
         StringBuilder str = new StringBuilder();
-        if (format.getObjectBeginOnNewline().value && indentLevel != 0) { // if this is the root entry (indent level is
+        if (JSONFormat.getObjectBeginOnNewline(jsonFormat) && indentLevel != 0) { // if this is the root entry (indent level is
                                                                           // 0) then don't enter down no matter what
             str.append(System.lineSeparator()).append(shortIndentBlock); // if the object should begin on a new line,
                                                                          // add a newline and short indent
@@ -148,7 +145,7 @@ public class JSONObject extends JSONEntry {
         str.append("{"); // add the initial open brace {
 
         String strBetweenItems;
-        if (format.getObjectNewlinePerItem().value) {
+        if (JSONFormat.getObjectNewlinePerItem(jsonFormat)) {
             strBetweenItems = System.lineSeparator() + longIndentBlock; // if there should be newlines, insert them and
                                                                         // indent
             str.append(strBetweenItems);
@@ -160,16 +157,16 @@ public class JSONObject extends JSONEntry {
 
         Map.Entry<String, JSONEntry> firstEntry = setIterator.next();
         str.append("\"").append(firstEntry.getKey()).append("\": ") // add the first key
-                .append(firstEntry.getValue().getJSONText(indentLevel + 1, format)); // add the first value
+                .append(firstEntry.getValue().toJSONText(indentLevel + 1, jsonFormat)); // add the first value
 
         setIterator.forEachRemaining(entry -> { // I use a lambda to avoid having to assign the next item over and over
                                                 // again
             str.append(",").append(strBetweenItems) // add comma and newline
                     .append("\"").append(entry.getKey()).append("\": ") // add the key and colon :
-                    .append(entry.getValue().getJSONText(indentLevel + 1, format)); // add the value
+                    .append(entry.getValue().toJSONText(indentLevel + 1, jsonFormat)); // add the value
         });
 
-        if (format.getObjectNewlinePerItem().value) {
+        if (JSONFormat.getObjectNewlinePerItem(jsonFormat)) {
             str.append(System.lineSeparator()).append(shortIndentBlock);
         }
 

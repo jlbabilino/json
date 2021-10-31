@@ -135,7 +135,8 @@ public class JSONDeserializer {
                 }
                 JSONEntry[] arrayEntries = ((JSONArray) jsonEntry).getArray();
                 int arrayLength = arrayEntries.length;
-                // have to get component because otherwise would make array with one too many dimensions:
+                // have to get component because otherwise would make array with one too many
+                // dimensions:
                 Object newArray = Array.newInstance(baseClass.getComponentType(), arrayLength);
                 Type genericComponentType = ((GenericArrayType) deserializedType).getGenericComponentType();
                 for (int i = 0; i < arrayLength; i++) {
@@ -479,6 +480,21 @@ public class JSONDeserializer {
         return deserializedObject;
     }
 
+    /**
+     * Deserializes a {@link JSONEntry} to a Java type specified by a given
+     * {@link TypeMarker}. Returns an object of the same type as the
+     * {@code TypeMarker}.
+     * 
+     * @param <T>        the Java type that the JSON is being deserialized to; it
+     *                   must agree with the TypeMarker
+     * @param jsonEntry  the JSON data to convert to a Java object
+     * @param typeMarker the type of Java object to create
+     * @return the newly created and populated Java object of type {@code <T>}
+     * @throws NullPointerException      if the JSON or type marker is {@code null}
+     * @throws IllegalArgumentException  if the {@code TypeMarker} is not fully
+     *                                   resolved (if it contains type variables)
+     * @throws JSONDeserializerException if there is an error while deserializing
+     */
     public static <T> T deserializeJSONEntry(JSONEntry jsonEntry, TypeMarker<T> typeMarker)
             throws NullPointerException, IllegalArgumentException, JSONDeserializerException {
         if (typeMarker == null) {
@@ -494,6 +510,18 @@ public class JSONDeserializer {
         return castObject;
     }
 
+    /**
+     * Deserializes a {@code JSONEntry} to a Java type specified by a given
+     * {@code Class}. Returns an object of the same type as the {@code Class}.
+     * 
+     * @param <T>       the Java type that the JSON is being deserialized to; it
+     *                  must agree with the {@code Class}
+     * @param jsonEntry the JSON data to convert to a Java object
+     * @param typeClass the type of Java object to create
+     * @return the newly created and populated Java object of type {@code <T>}
+     * @throws NullPointerException      if the JSON or type class is {@code null}
+     * @throws JSONDeserializerException if there is an error while deserializing
+     */
     public static <T> T deserializeJSONEntry(JSONEntry jsonEntry, Class<T> typeClass)
             throws NullPointerException, JSONDeserializerException {
         @SuppressWarnings("unchecked")
@@ -501,6 +529,18 @@ public class JSONDeserializer {
         return castObject;
     }
 
+    /**
+     * This private internal method is used to prepare the array of objects that
+     * should be passed into a method while deserializing. It exists to simplify the
+     * code and reduce repetition.
+     * 
+     * @param jsonEntry       the JSON data to deserialize from
+     * @param executable      the method or constructor to prepare parameters for
+     * @param typeVariableMap the table that connects type variables to resolved
+     *                        types
+     * @return the prepared parameters as an array of Objects
+     * @throws JSONDeserializerException if there is an error while deserializing
+     */
     private static Object[] prepareParameters(JSONEntry jsonEntry, Executable executable,
             Map<TypeVariable<?>, Type> typeVariableMap) throws JSONDeserializerException {
         Class<?> executableClass = executable.getDeclaringClass();
@@ -549,6 +589,17 @@ public class JSONDeserializer {
         return preparedParameters;
     }
 
+    /**
+     * Extracts the {@link Type} from a {@link TypeMarker}. For example,
+     * <pre>typeMarkerToType(new TypeMarker&lt;List&lt;Integer&gt;&gt;() {})</pre> returns a
+     * {@link ParameterizedType} corresponding to {@code List<Integer>}.
+     * 
+     * @param typeMarker the {@code TypeMarker} to be converted to a {@code Type}
+     * @return the converted {@code Type}
+     * @throws IllegalArgumentException if the {@code TypeMarker} is not an annonymous inner
+     *                                  class or direct implementation of
+     *                                  {@code TypeMarker}
+     */
     private static Type typeMarkerToType(TypeMarker<?> typeMarker) throws IllegalArgumentException {
         Type deserializedType;
         Class<?> typeMarkerClass = typeMarker.getClass();

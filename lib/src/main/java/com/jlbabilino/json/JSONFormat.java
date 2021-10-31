@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Triple Helix Robotics - FRC Team 2363
+ * Copyright (C) 2021 Justin Babilino
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,85 +23,206 @@ package com.jlbabilino.json;
  * @author Justin Babilino
  */
 public class JSONFormat {
-
-    // These options are set with default settings that can be overwritten later
-    /**
-     * Holds the value for indentSpaces
-     */
-    private JSONFormatOption.IndentSpaces indentSpaces = JSONFormatOption.IndentSpaces.FOUR;
-    /**
-     * Holds the value for arrayNewlinePerItem
-     */
-    private JSONFormatOption.ArrayNewlinePerItem arrayNewlinePerItem = JSONFormatOption.ArrayNewlinePerItem.TRUE;
-    /**
-     * Holds the value for arrayBeginOnNewLine
-     */
-    private JSONFormatOption.ArrayBeginOnNewline arrayBeginOnNewline = JSONFormatOption.ArrayBeginOnNewline.FALSE;
-    /**
-     * Holds the value for objectNewlinePerItem
-     */
-    private JSONFormatOption.ObjectNewlinePerItem objectNewlinePerItem = JSONFormatOption.ObjectNewlinePerItem.TRUE;
-    /**
-     * Holds the value for objectBeginOnNewline
-     */
-    private JSONFormatOption.ObjectBeginOnNewline objectBeginOnNewline = JSONFormatOption.ObjectBeginOnNewline.FALSE;
+    public static void main(String[] args) {
+        int formatCode = getFormatCode(8, false, true, false, true, false);
+        System.out.println("Indent spaces count: " + getIndentSpacesCount(formatCode));
+        System.out.println("Uses tabs: " + getUseTabs(formatCode));
+        System.out.println("Indent string: \"" + getIndentString(formatCode) + "\"");
+        System.out.println("Array newline per item: " + getArrayNewlinePerItem(formatCode));
+        System.out.println("Array begin on newline: " + getArrayBeginOnNewline(formatCode));
+        System.out.println("Object newline per item: " + getObjectNewlinePerItem(formatCode));
+        System.out.println("Object begin on newline: " + getObjectBeginOnNewline(formatCode));
+    }
 
     /**
-     * Constructs a <code>JSONFormat</code> with an array of format options. Default
-     * options are selected if they are not given in the options array. Null inputs
-     * will not affect the format, and duplicate inputs will result in the input
-     * with the greatest index taking affect.
-     *
-     * @param options an array of formatting options
+     * Stores a cache of all possible indent strings that use spaces
      */
-    public JSONFormat(JSONFormatOption... options) {
-        for (JSONFormatOption option : options) {
-            if (option instanceof JSONFormatOption.IndentSpaces) {
-                indentSpaces = (JSONFormatOption.IndentSpaces) option;
-            } else if (option instanceof JSONFormatOption.ArrayNewlinePerItem) {
-                arrayNewlinePerItem = (JSONFormatOption.ArrayNewlinePerItem) option;
-            } else if (option instanceof JSONFormatOption.ArrayBeginOnNewline) {
-                arrayBeginOnNewline = (JSONFormatOption.ArrayBeginOnNewline) option;
-            } else if (option instanceof JSONFormatOption.ObjectNewlinePerItem) {
-                objectNewlinePerItem = (JSONFormatOption.ObjectNewlinePerItem) option;
-            } else if (option instanceof JSONFormatOption.ObjectBeginOnNewline) {
-                objectBeginOnNewline = (JSONFormatOption.ObjectBeginOnNewline) option;
-            }
+    private static final String[] indentSpacesStrings = new String[16];
+    /**
+     * Stores a cache of all possible indent strings that use tabs
+     */
+    private static final String[] indentTabsStrings = new String[16];
+
+    static {
+        indentSpacesStrings[0] = "";
+        for (int i = 1; i < 16; i++) {
+            indentSpacesStrings[i] = indentSpacesStrings[i - 1] + " ";
+        }
+        indentTabsStrings[0] = "";
+        for (int i = 1; i < 16; i++) {
+            indentTabsStrings[i] = indentTabsStrings[i - 1] + "\t";
         }
     }
 
     /**
-     * @return the options for indent spaces
+     * The bits in a JSON format code that indicate the number of spaces
      */
-    public JSONFormatOption.IndentSpaces getIndentSpaces() {
-        return indentSpaces;
+    public static final int INDENT_SPACES_BITS = 0b000001111;
+    /**
+     * The bit in a JSON format code that if equal to {@code 0} indicates that
+     * <i>spaces</i> should be used for indents and if equal to {@code 1} indicates
+     * that <i>tabs</i> shold be used.
+     */
+    public static final int USE_TABS_BIT = 0b000010000;
+    /**
+     * The bit in a JSON format code that if equal to {@code 0} indicates that
+     * newlines <i>should not</i> be placed between each item in a JSON array and if
+     * equal to {@code 1} indicates that newlines <i>should</i> be placed between
+     * each item.
+     */
+    public static final int ARRAY_NEWLINE_PER_ITEM_BIT = 0b000100000;
+    /**
+     * The bit in a JSON format code that if equal to {@code 0} indicates that the
+     * opening square bracket {@code [} in a JSON array <i>should not</i> be placed
+     * on a newline and if equal to {@code 1} indicates that the opening square
+     * bracket {@code [} <i>should</i> be placed on a newline.
+     */
+    public static final int ARRAY_BEGIN_ON_NEWLINE_BIT = 0b001000000;
+    /**
+     * The bit in a JSON format code that if equal to {@code 0} indicates that
+     * newlines <i>should not</i> be placed between each item in a JSON object and
+     * if equal to {@code 1} indicates that newlines <i>should</i> be placed between
+     * each item.
+     */
+    public static final int OBJECT_NEWLINE_PER_ITEM_BIT = 0b010000000;
+    /**
+     * The bit in a JSON format code that if equal to {@code 0} indicates that the
+     * opening curly brace <code>{</code> in a JSON object <i>should not</i> be
+     * placed on a newline and if equal to {@code 1} indicates that the opening
+     * curly brace <code>{</code> <i>should</i> be placed on a newline.
+     */
+    public static final int OBJECT_BEGIN_ON_NEWLINE_BIT = 0b100000000;
+
+    /**
+     * The default format code, used internally. This is hidden from the
+     * implementation of this library because there should never be a time that the
+     * user would enter this. If a user wanted to export a JSON with the default
+     * format options, they could use the {@code toString} method instead.
+     */
+    static final int DEFAULT_FORMAT_CODE = 0b010100100;
+
+    /**
+     * Prevent instantiation
+     */
+    private JSONFormat() {
     }
 
     /**
-     * @return the options for array newlines
+     * Generates a JSON format code with specified options.
+     * 
+     * @param indentSpacesCount    the number of spaces or tabs in indents, from
+     *                             {@code 0} to {@code 15}
+     * @param useTabs              if {@code true}, use tabs instead of spaces in
+     *                             indents
+     * @param arrayNewlinePerItem  if {@code true}, include line breaks between
+     *                             array items
+     * @param arrayBeginOnNewline  if {@code true}, begin arrays on newlines
+     * @param objectNewlinePerItem if {@code true}, include line breaks between
+     *                             object items
+     * @param objectBeginOnNewline if {@code true}, begin objects on newlines
+     * @return the generated JSON format code, as an {@code int}
      */
-    public JSONFormatOption.ArrayNewlinePerItem getArrayNewlinePerItem() {
-        return arrayNewlinePerItem;
+    public static int getFormatCode(int indentSpacesCount, boolean useTabs, boolean arrayNewlinePerItem,
+            boolean arrayBeginOnNewline, boolean objectNewlinePerItem, boolean objectBeginOnNewline) {
+        if (indentSpacesCount < 0) {
+            indentSpacesCount = 0;
+        } else if (indentSpacesCount > INDENT_SPACES_BITS) {
+            indentSpacesCount = INDENT_SPACES_BITS;
+        }
+        int formatCode = indentSpacesCount;
+        formatCode += useTabs ? USE_TABS_BIT : 0;
+        formatCode += arrayNewlinePerItem ? ARRAY_NEWLINE_PER_ITEM_BIT : 0;
+        formatCode += arrayBeginOnNewline ? ARRAY_BEGIN_ON_NEWLINE_BIT : 0;
+        formatCode += objectNewlinePerItem ? OBJECT_NEWLINE_PER_ITEM_BIT : 0;
+        formatCode += objectBeginOnNewline ? OBJECT_BEGIN_ON_NEWLINE_BIT : 0;
+        return formatCode;
     }
 
     /**
-     * @return the options for array initial newlines
+     * Gets the number of indent spaces from a JSON format code.
+     * 
+     * @param jsonFormat the JSON format code
+     * @return the {@code int} value of spaces
      */
-    public JSONFormatOption.ArrayBeginOnNewline getArrayBeginOnNewline() {
-        return arrayBeginOnNewline;
+    public static int getIndentSpacesCount(int jsonFormat) {
+        return jsonFormat & INDENT_SPACES_BITS;
     }
 
     /**
-     * @return the options for object newlines
+     * Returns {@code true} if the JSON format code uses tabs and {@code false}
+     * otherwise.
+     * 
+     * @param jsonFormat the JSON format code
+     * @return {@code true} if the JSON format code uses tabs, {@code false}
+     *         otherwise
      */
-    public JSONFormatOption.ObjectNewlinePerItem getObjectNewlinePerItem() {
-        return objectNewlinePerItem;
+    public static boolean getUseTabs(int jsonFormat) {
+        return (jsonFormat & USE_TABS_BIT) == USE_TABS_BIT;
     }
 
     /**
-     * @return the options for object initial newlines
+     * Gets the indent string from a JSON format code. For example, if you put in a
+     * JSON format code with an indent spaces count of 6, then this method would
+     * return a {@code String} with six spaces.
+     * 
+     * @param jsonFormat the JSON format code
+     * @return the indent string
      */
-    public JSONFormatOption.ObjectBeginOnNewline getObjectBeginOnNewline() {
-        return objectBeginOnNewline;
+    public static String getIndentString(int jsonFormat) {
+        int spacesCount = getIndentSpacesCount(jsonFormat);
+        boolean useTabs = getUseTabs(jsonFormat);
+        if (useTabs) {
+            return indentTabsStrings[spacesCount];
+        } else {
+            return indentSpacesStrings[spacesCount];
+        }
+    }
+
+    /**
+     * Returns {@code true} if the JSON format code uses newlines between array
+     * items and {@code false} otherwise.
+     * 
+     * @param jsonFormat the JSON format code
+     * @return {@code true} if the JSON format code uses newlines between array
+     *         items, {@code false} otherwise
+     */
+    public static boolean getArrayNewlinePerItem(int jsonFormat) {
+        return (jsonFormat & ARRAY_NEWLINE_PER_ITEM_BIT) == ARRAY_NEWLINE_PER_ITEM_BIT;
+    }
+
+    /**
+     * Returns {@code true} if the JSON format code begins arrays on newlines and
+     * {@code false} otherwise.
+     * 
+     * @param jsonFormat the JSON format code
+     * @return {@code true} if the JSON format code begins arrays on newlines,
+     *         {@code false} otherwise
+     */
+    public static boolean getArrayBeginOnNewline(int jsonFormat) {
+        return (jsonFormat & ARRAY_BEGIN_ON_NEWLINE_BIT) == ARRAY_BEGIN_ON_NEWLINE_BIT;
+    }
+
+    /**
+     * Returns {@code true} if the JSON format code uses newlines between object
+     * items and {@code false} otherwise.
+     * 
+     * @param jsonFormat the JSON format code
+     * @return {@code true} if the JSON format code uses newlines between object
+     *         items, {@code false} otherwise
+     */
+    public static boolean getObjectNewlinePerItem(int jsonFormat) {
+        return (jsonFormat & OBJECT_NEWLINE_PER_ITEM_BIT) == OBJECT_NEWLINE_PER_ITEM_BIT;
+    }
+
+    /**
+     * Returns {@code true} if the JSON format code begins objects on newlines and
+     * {@code false} otherwise.
+     * 
+     * @param jsonFormat the JSON format code
+     * @return {@code true} if the JSON format code begins objects on newlines,
+     *         {@code false} otherwise
+     */
+    public static boolean getObjectBeginOnNewline(int jsonFormat) {
+        return (jsonFormat & OBJECT_BEGIN_ON_NEWLINE_BIT) == OBJECT_BEGIN_ON_NEWLINE_BIT;
     }
 }
