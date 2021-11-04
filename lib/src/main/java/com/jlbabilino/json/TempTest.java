@@ -42,7 +42,7 @@ public class TempTest<A> {
         }
 
         TypeMarker<TempTest<String>> typeMarker = new TypeMarker<>() {};
-        JSON parsedJSON = JSONParser.parseString(jsonString);
+        JSON parsedJSON = JSONParser.parseStringAsJSON(jsonString);
         try {
             TempTest<String> deserializedTempTest = JSONDeserializer.deserializeJSON(parsedJSON, typeMarker);
             if (tempTest.equals(deserializedTempTest)) {
