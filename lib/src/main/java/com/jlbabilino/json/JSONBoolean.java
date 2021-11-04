@@ -77,9 +77,9 @@ public class JSONBoolean extends JSONEntry {
      * Boolean.toString(getBoolean())
      * </pre>
      *
-     * @param indentLevel this parameter has no effect on the result or effect of this implementation of this method.
-     * @param format this parameter has no effect on the result or effect of this implementation of this method.
-     * @return a {@code String} representing this JSON boolean.
+     * @param indentLevel this parameter has no effect on the result or effect of this implementation of this method
+     * @param jsonFormat this parameter has no effect on the result or effect of this implementation of this method
+     * @return a {@code String} representing this JSON boolean
      */
     @Override
     public String toJSONText(int indentLevel, int jsonFormat) {

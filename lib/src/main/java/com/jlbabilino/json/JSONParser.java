@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Triple Helix Robotics - FRC Team 2363
+ * Copyright (C) 2021 Justin Babilino
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,33 +26,30 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This class takes a <code>String</code> input, and outputs a
- * <code>JSON</code>. This is only possible if the <code>String</code> is valid
- * JSON data. If it is not, exceptions will be thrown to indicate the issue to
- * the user.
+ * This class takes a {@code String} in the format of JSON, parses it, and
+ * outputs its equivalent in this library. This is only possible if the
+ * {@code String} is valid JSON data. If it is not, a
+ * {@link JSONParserException} will be thrown to indicate the issue to the user.
+ * This is the first part of the first essential part of this library; it allows
+ * you to interface Java code with other computer applications through Strings
+ * and files.
  *
+ * @see JSONSerializer
+ * @see JSONDeserializer
  * @author Justin Babilino
  */
 public class JSONParser {
 
     /**
-     * A string matches this regex if and only if it complies with the JSON standard
-     * for numbers
+     * The {@code JSONEntry} where all parsed data is dumped to.
      */
-    // public static Pattern jsonNumberRegex =
-    // Pattern.compile("(0|[1-9])\\d*(\\.\\d*)?([eE]\\d+)?"); // old
-    // "(0|[1-9]*)(\\.\\d*)?([eE]\\d+)?"
+    private JSONEntry jsonEntry;
     /**
-     * The <code>JSON</code> where all parsed data is dumped to
-     */
-    private JSON json;
-    /**
-     * The string where JSON data is gathered from.
+     * The {@code String} where JSON data is collected from.
      */
     private final String jsonString;
-
     /**
-     * The current index in <code>jsonString</code>.
+     * The current index in {@code jsonString}.
      */
     private int index;
     /**
@@ -62,33 +59,55 @@ public class JSONParser {
     private int lineNumber;
 
     /**
-     * Constructs a <code>JSONParser</code> with a <code>String</code> representing
-     * the text in the JSON file.
+     * Constructs a {@code JSONParser} with a {@code String} representing the text
+     * in the JSON file. This constructor is private because the static methods
+     * {@code parseStringAsJSONEntry()} and {@code parseStringAsJSON()} should be
+     * used instead of instances of this class.
      *
-     * @throws JSONParserException if the JSON was not able to be parsed
-     * @param jsonString the <code>String</code> data from the JSON file
+     * @param jsonString the {@code String} data from the JSON file
+     * @throws JSONParserException if there was an error in the JSON string
      */
     private JSONParser(String jsonString) throws JSONParserException {
         this.jsonString = jsonString;
         index = 0;
-        lineNumber = 1; // line num starts at 1 is typically the convention
+        lineNumber = 1; // line number starts at 1 is typically the convention
         parse(); // Automatically parse at construction.
     }
 
-    public static JSON parseString(String jsonString) throws JSONParserException {
+    /**
+     * Parses a {@code String} containing JSON data as a {@link JSONEntry} to be
+     * used with this library.
+     * 
+     * @param jsonString the {@code String} data to parse from
+     * @return the parsed {@code JSON}
+     * @throws JSONParserException if there is an error in the string data
+     */
+    public static JSONEntry parseStringAsJSONEntry(String jsonString) throws JSONParserException {
         JSONParser parser = new JSONParser(jsonString);
-        return parser.getJSON();
+        return parser.jsonEntry;
     }
 
     /**
-     * This method parses <code>jsonString</code> into a JSON.
+     * Parses a {@code String} containing JSON data as a {@link JSON} to be used
+     * with this library.
+     * 
+     * @param jsonString the {@code String} data to parse from
+     * @return the parsed {@code JSON}
+     * @throws JSONParserException if there is an error in the string data
+     */
+    public static JSON parseStringAsJSON(String jsonString) throws JSONParserException {
+        JSONParser parser = new JSONParser(jsonString);
+        return new JSON(parser.jsonEntry);
+    }
+
+    /**
+     * This method parses the {@code jsonString} into a JSON.
      *
      * @throws JSONParserException if there is an error during parsing
      */
     private void parse() throws JSONParserException {
         skipWhitespace();
-        JSONEntry rootEntry = entry();
-        json = new JSON(rootEntry);
+        jsonEntry = entry();
     }
 
     /**
@@ -106,57 +125,60 @@ public class JSONParser {
 
     /**
      * <p>
-     * <b>Precondition: </b> the index must be at the beginning of a new JSON entry.
+     * <b>Precondition</b>: the index must be at the beginning of a new JSON entry.
      * </p>
      * <p>
      * This method determines which type of JSON entry is in the text block that it
-     * starts on, returning a new <code>JSONEntry</code> with the appropriate data.
+     * starts on, returning a new {@code JSONEntry} with the data parsed from that
+     * block.
      * </p>
      *
-     * @return the <code>JSONEntry</code> for the text block beginning on
-     * @throws JSONParserException if there is no entry found in the text block
+     * @return the {@code JSONEntry} from the text block that the index begins on
+     * @throws JSONParserException if there is no entry found in the text block or
+     *                             there is an error in the parsing of an entry
+     *                             inside this entry
      */
     private JSONEntry entry() throws JSONParserException {
         JSONEntry entry;
         char initialChar = charAtIndex();
         switch (initialChar) {
-            case '{':
-                entry = objectEntry();
-                break;
-            case '[':
-                entry = arrayEntry();
-                break;
-            case '"':
-                entry = stringEntry();
-                break;
-            case 't':
-                entry = booleanEntry(true);
-                break;
-            case 'f':
-                entry = booleanEntry(false);
-                break;
-            case 'n':
-                entry = nullEntry();
-                break;
-            default:
-                if (isCharNumber(initialChar)) {
-                    entry = numberEntry();
-                } else {
-                    throw new JSONParserException(index, lineNumber,
-                            "Expecting '{', '[', Boolean, Number, String, Null, got: '" + initialChar + "'");
-                }
-                break;
+        case '{':
+            entry = objectEntry();
+            break;
+        case '[':
+            entry = arrayEntry();
+            break;
+        case '"':
+            entry = stringEntry();
+            break;
+        case 't':
+            entry = booleanEntry(true);
+            break;
+        case 'f':
+            entry = booleanEntry(false);
+            break;
+        case 'n':
+            entry = nullEntry();
+            break;
+        default:
+            if (isCharNumber(initialChar)) {
+                entry = numberEntry();
+            } else {
+                throw new JSONParserException(index, lineNumber,
+                        "Expecting '{', '[', Boolean, Number, String, Null, got: '" + initialChar + "'");
+            }
+            break;
         }
         return entry;
     }
 
     /**
      * This method parses block of JSON text of object type and generates a
-     * <code>JSONObjectEntry</code> with the appropriate data.
+     * {@code JSONObject} with the appropriate data.
      *
-     * @return a <code>JSONObjectEntry</code> with the data associated with the
-     *         block of text
-     * @throws JSONParserException if there is improper syntax in the object
+     * @return a {@code JSONObject} with the data associated with the block of text
+     * @throws JSONParserException if there is improper syntax in the object or an
+     *                             error in an entry inside this object
      */
     private JSONObject objectEntry() throws JSONParserException {
         int startIndex = index; // save index location while testing for blank object
@@ -194,10 +216,12 @@ public class JSONParser {
 
     /**
      * This method parses an array block of JSON text and generates the appropriate
-     * <code>ArrayJSONEntry</code>.
+     * {@code JSONArray}.
      *
-     * @return an <code>ArrayJSONEntry</code> with the appropriate data
-     * @throws JSONParserException if there is a syntax error in the text block
+     * @return a {@code JSONArray} with the appropriate data
+     * @throws JSONParserException if there is a syntax error in the array text
+     *                             block or there is an error while parsing an array
+     *                             item
      */
     private JSONArray arrayEntry() throws JSONParserException {
         int startIndex = index; // save index location while testing for blank array
@@ -227,12 +251,11 @@ public class JSONParser {
     }
 
     /**
-     * <b>Precondition: </b> the index must be placed at the beginning of a String
+     * <b>Precondition</b>: the index must be placed at the beginning of a String
      * JSON entry.
      * <p>
      * This method parses a String entry from a block of string JSON text. It then
-     * generates and returns a <code>StringJSONEntry</code> with the appropriate
-     * data.
+     * generates and returns a {@code JSONString} with the appropriate data.
      * </p>
      *
      * @return the string entry associated with the block of text
@@ -416,16 +439,13 @@ public class JSONParser {
      * @return the string found at the current index with double quotes removed
      * @throws JSONParserException if the string at the index has a syntax error
      */
-    protected String readString() throws JSONParserException {
+    String readString() throws JSONParserException {
         if (charAtIndex() != '"') {
             throw new JSONParserException(index, lineNumber, "Expecting String, got '" + charAtIndex() + "'");
         }
         index++; // skip past initial double quote "
         int stringLength = 0;
         while (charAtIndex() != '"' || charAt(index - 1) == '\\') {
-            if (charAtIndex() == '\\') {
-
-            }
             if (isNewline()) {
                 throw new JSONParserException(index, lineNumber, "Missing end \" to close String");
             }
@@ -435,14 +455,5 @@ public class JSONParser {
         String string = jsonString.substring(index - stringLength, index);
         index++; // skip past final double quote
         return string;
-    }
-
-    /**
-     * Returns the parsed <code>JSON</code>.
-     *
-     * @return the <code>JSON</code>
-     */
-    public JSON getJSON() {
-        return json;
     }
 }

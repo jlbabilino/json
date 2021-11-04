@@ -43,7 +43,7 @@ public class JSON {
      * Exports this JSON as a string. This can be saved to a {@code .json} file to
      * be used with other programs and interfaces.
      *
-     * @param options formatting options for JSON exporting
+     * @param jsonFormat formatting options for JSON exporting
      * @return the exported JSON
      */
     public String exportJSON(int jsonFormat) {

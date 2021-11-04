@@ -277,8 +277,9 @@ public class JSONDeserializer {
                                 entry = jsonEntry;
                             } else if (field.isAnnotationPresent(DeserializedJSONObjectValue.class)) {
                                 if (classJSONType != JSONType.OBJECT) {
-                                    // TODO: throw exception
-                                    throw new JSONDeserializerException("message");
+                                    throw new JSONDeserializerException("Cannot use \"DeserializedJSONObjectValue\" since " +
+                                            baseClass.getCanonicalName() + " serializes to JSON " +
+                                            classJSONType + ".");
                                 }
                                 JSONObject jsonObject = (JSONObject) jsonEntry;
                                 String key = field.getAnnotation(DeserializedJSONObjectValue.class).key();
@@ -290,8 +291,9 @@ public class JSONDeserializer {
                                 entry = jsonObject.get(key);
                             } else if (field.isAnnotationPresent(DeserializedJSONArrayItem.class)) {
                                 if (classJSONType != JSONType.ARRAY) {
-                                    // TODO: throw exception
-                                    throw new JSONDeserializerException("message");
+                                    throw new JSONDeserializerException("Cannot use \"DeserializedJSONArrayItem\" since " +
+                                            baseClass.getCanonicalName() + " serializes to JSON " +
+                                            classJSONType + ".");
                                 }
                                 JSONArray jsonArray = (JSONArray) jsonEntry;
                                 int index = field.getAnnotation(DeserializedJSONArrayItem.class).index();
@@ -302,14 +304,14 @@ public class JSONDeserializer {
                                 }
                                 entry = jsonArray.get(index);
                             }
-                            if (entry != null) {
+                            if (entry != null) { // if one of the deserialized annotations was used
                                 Type resolvedType = resolveType(field.getGenericType(), typeVariableMap);
                                 Object newValue = deserializeJSONEntry(entry, resolvedType);
                                 try {
                                     field.set(deserializedObject, newValue);
                                 } catch (IllegalAccessException e) {
-                                    // TODO: throw exception
-                                    throw new JSONDeserializerException("message");
+                                    throw new JSONDeserializerException("Unable to set field " + field.getName() +
+                                            " in " + baseClass.getCanonicalName() + ".");
                                 }
                             }
                         }
@@ -319,25 +321,22 @@ public class JSONDeserializer {
                                 try {
                                     method.invoke(deserializedObject, preparedParameters);
                                 } catch (IllegalAccessException e) {
-                                    // TODO: throw exception
-                                    throw new JSONDeserializerException("message");
+                                    throw new JSONDeserializerException("Unable to invoke method " + method.getName() +
+                                            " in " + baseClass.getCanonicalName() + ".");
                                 } catch (InvocationTargetException e) {
-                                    // TODO: throw exception
-                                    throw new JSONDeserializerException("message");
+                                    throw new JSONDeserializerException("Internal exception in method " + method.getName() + " in " +
+                                            baseClass.getCanonicalName() + ": " + e.getCause().getMessage());
                                 }
                             }
                         }
                     }
                 } else if (baseClass == List.class) {
                     if (!jsonEntry.isArray()) {
-                        // TODO: throw exception
-                        throw new JSONDeserializerException("message");
+                        throw new JSONDeserializerException("This library does not support converting any JSON type except JSON arrays to Java Lists.");
                     }
                     JSONEntry[] arrayEntries = ((JSONArray) jsonEntry).getArray();
                     if (typeVariableMap.size() != 1) {
-                        // this lib doesn't support raw types
-                        // TODO: throw exception
-                        throw new JSONDeserializerException("message");
+                        throw new JSONDeserializerException("This library does not support raw types for Java Collections.");
                     }
                     Type listType = typeVariableMap.get(LIST_TYPE_VARIABLE);
                     List<Object> newList = new ArrayList<>();
@@ -351,7 +350,7 @@ public class JSONDeserializer {
                     deserializedObject = null;
                 } else if (baseClass.isArray()) {
                     if (!jsonEntry.isArray()) {
-                        // TODO throw exception
+                        throw new JSONDeserializerException("This library does not support converting other JSON types besides arrays to Java arrays.");
                     }
                     Class<?> arrayComponentType = baseClass.getComponentType();
                     JSONEntry[] arrayJSONEntries = ((JSONArray) jsonEntry).getArray();
@@ -362,7 +361,6 @@ public class JSONDeserializer {
                     }
                     deserializedObject = array;
                 } else if (baseClass.isPrimitive()) {
-                    // TODO: make this closer to style of rest of code
                     if (baseClass == byte.class) {
                         if (jsonEntry.isNumber()) {
                             deserializedObject = ((JSONNumber) jsonEntry).getNumber().byteValue();
@@ -445,8 +443,8 @@ public class JSONDeserializer {
                             deserializedObject = Double.valueOf(number.doubleValue());
                         } else {
                             throw new JSONDeserializerException(
-                                    "Cannot deserialize this JSON into child class of Number "
-                                            + baseClass.getCanonicalName());
+                                    "Cannot deserialize this JSON into child class of Number " +
+                                    baseClass.getCanonicalName());
                         }
                     } else {
                         throw new JSONDeserializerException(
@@ -551,8 +549,7 @@ public class JSONDeserializer {
             JSONEntry entry;
             if (parameters[i].isAnnotationPresent(DeserializedJSONObjectValue.class)) {
                 if (!jsonEntry.isObject()) {
-                    // TODO: throw exception
-                    throw new JSONDeserializerException("message");
+                    throw new JSONDeserializerException("Cannot use \"DeserializedJSONObjectValue\" since the given JSON entry is not a JSON object.");
                 }
                 JSONObject jsonObject = (JSONObject) jsonEntry;
                 String key = parameters[i].getAnnotation(DeserializedJSONObjectValue.class).key();
@@ -565,8 +562,7 @@ public class JSONDeserializer {
                 entry = jsonObject.get(key);
             } else if (parameters[i].isAnnotationPresent(DeserializedJSONArrayItem.class)) {
                 if (!jsonEntry.isArray()) {
-                    // TODO: throw exception
-                    throw new JSONDeserializerException("message");
+                    throw new JSONDeserializerException("Cannot use \"DeserializedJSONArrayItem\" since the given JSON entry is not a JSON array.");
                 }
                 JSONArray jsonArray = (JSONArray) jsonEntry;
                 int index = parameters[i].getAnnotation(DeserializedJSONArrayItem.class).index();
@@ -580,8 +576,7 @@ public class JSONDeserializer {
             } else if (parameters[i].isAnnotationPresent(DeserializedJSONEntry.class)) {
                 entry = jsonEntry;
             } else {
-                // TODO: throw exception
-                throw new JSONDeserializerException("message");
+                throw new JSONDeserializerException("All parameters of a method annotated with \"DeserializedJSONTarget\" must be annotated with \"DeserializedJSONObjectValue\", \"DeserializedJSONArrayItem\", or \"DeserializedJSONEntry\".");
             }
             Type resolvedParameterType = resolveType(parameters[i].getParameterizedType(), typeVariableMap);
             preparedParameters[i] = deserializeJSONEntry(entry, resolvedParameterType);
@@ -615,5 +610,72 @@ public class JSONDeserializer {
         }
         deserializedType = typeMarkerInterface.getActualTypeArguments()[0];
         return deserializedType;
+    }
+
+    /**
+     * This method removes the escape sequences from JSON strings and returns strings that 
+     * contain the actual characters.
+     * 
+     * @param escapedString
+     * @return
+     * @throws JSONDeserializerException
+     */
+    public static String unescapeString(String escapedString) throws JSONDeserializerException {
+        StringBuilder unescapedString = new StringBuilder();
+        int escapedStringLength = escapedString.length();
+        int i = 0;
+        int lastEscapedCharNextIndex = 0;
+        while (i < escapedStringLength) {
+            char charAtI = escapedString.charAt(i);
+            i++;
+            if (charAtI == '\\') {
+                unescapedString.append(escapedString.substring(lastEscapedCharNextIndex, i - 1));
+                char escapeChar = escapedString.charAt(i);
+                i++;
+                switch (escapeChar) {
+                    case '"':
+                        unescapedString.append("\"");
+                    break;
+                    case '\\':
+                        unescapedString.append("\\");
+                    break;
+                    case '/':
+                        unescapedString.append("/");
+                    break;
+                    case 'b':
+                        unescapedString.append("\b");
+                    break;
+                    case 'f':
+                        unescapedString.append("\f");
+                    break;
+                    case 'n':
+                        unescapedString.append("\n");
+                    break;
+                    case 'r':
+                        unescapedString.append("\\");
+                    break;
+                    case 't':
+                        unescapedString.append("\t");
+                    break;
+                    case 'u':
+                        String codeString = escapedString.substring(i, i + 4);
+                        i += 4;
+                        char decodedChar;
+                        try {
+                            short parsedCode = Short.parseShort(codeString, 16);
+                            decodedChar = (char) parsedCode;
+                        } catch (NumberFormatException e) {
+                            throw new JSONDeserializerException("Invalid escaped Unicode char point. If you use \\u, make sure that the four characters after are hexadecimal.");
+                        }
+                        unescapedString.append(decodedChar);
+                    break;
+                    default:
+                        throw new JSONDeserializerException("Unable to unescape string: Found invalid sequence \"" + escapeChar + ", make sure that all escape characters are valid.");
+                }
+                lastEscapedCharNextIndex = i;
+            }
+        }
+        unescapedString.append(escapedString.substring(lastEscapedCharNextIndex, i));
+        return unescapedString.toString();
     }
 }

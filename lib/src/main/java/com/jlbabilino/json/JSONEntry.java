@@ -23,6 +23,7 @@ import static com.jlbabilino.json.JSONFormat.DEFAULT_FORMAT_CODE;
  * This abstract class is the super class of every type of entry possible in a
  * JSON structure. Each entry class that contains sub-entries always uses this
  * type for those entries.
+ * </p>
  * 
  * <p>
  * Here's an example: This is an example JSON file that could be imported into
@@ -37,15 +38,16 @@ import static com.jlbabilino.json.JSONFormat.DEFAULT_FORMAT_CODE;
  * <br>&nbsp;&nbsp;&nbsp; }]
  * <br>}
  * </code>
+ * </p>
  * 
  * <p>
  * Let's say that the root object of this has been imported into a variable
  * {@code entry}.
+ * </p>
  * 
  * <p>
  * Retrieving the name of the first person:
- * 
- * <p>
+ * </p>
  * 
  * <pre>
  * JSONObject rootObject = (JSONObject) entry;
@@ -57,8 +59,7 @@ import static com.jlbabilino.json.JSONFormat.DEFAULT_FORMAT_CODE;
  * 
  * <p>
  * Let's break this down:
- * 
- * <p>
+ * </p>
  * 
  * <pre>
  * JSONObject rootObject = (JSONObject) entry;
@@ -67,8 +68,7 @@ import static com.jlbabilino.json.JSONFormat.DEFAULT_FORMAT_CODE;
  * <p>
  * This casts the root {@code JSONEntry} to a {@code JSONObject} so that
  * key-value pairs can be accessed later.
- * 
- * <p>
+ * </p>
  * 
  * <pre>
  * JSONArray peopleArray = (JSONArray) rootObject.get("people");
@@ -77,8 +77,7 @@ import static com.jlbabilino.json.JSONFormat.DEFAULT_FORMAT_CODE;
  * <p>
  * This gets the {@code JSONEntry} mapped to the key {@code "people"} and casts
  * it as a {@code JSONArray} so that items can be accessed later.
- * 
- * <p>
+ * </p>
  * 
  * <pre>
  * JSONObject firstPersonObject = (JSONObject) peopleArray.get(0);
@@ -87,18 +86,16 @@ import static com.jlbabilino.json.JSONFormat.DEFAULT_FORMAT_CODE;
  * <p>
  * This gets the first {@code JSONEntry} in the array and casts it as a
  * {@code JSONObject} because that is the type of the array item.
- * 
- * <p>
+ * </p>
  * 
  * <pre>
  * JSONString nameString = (JSONString) firstPersonObject.get("name");
  * </pre>
- *
+ * 
  * <p>
  * This gets the value mapped to the key {@code "name"} and casts it as a
  * {@code JSONString}, since the value is a JSON string.
- * 
- * <p>
+ * </p>
  * 
  * <pre>
  * String firstPersonName = nameString.getString();
@@ -107,18 +104,48 @@ import static com.jlbabilino.json.JSONFormat.DEFAULT_FORMAT_CODE;
  * <p>
  * This gets the name of the first person in the array of people, as a
  * {@code String}, through the {@code getString()} method of {@link JSONString}.
+ * </p>
  * 
  * <p>
  * Data can be extracted through this method, but it is tedious and slightly
  * unintuitive, so it is recomended that data is deserialized through
  * {@link JSONDeserializer} to convert JSON data to Java data.
+ * </p>
  * 
+ * @see JSON
  * @author Justin Babilino
  */
 public abstract class JSONEntry {
 
+    /**
+     * This enumeration can indicate a type of JSON entry. It includes objects,
+     * arrays, booleans, numbers, strings, and nulls.
+     */
     public static enum JSONType {
-        OBJECT, ARRAY, BOOLEAN, NUMBER, STRING, NULL
+        /**
+         * The {@code JSONType} for JSON objects.
+         */
+        OBJECT,
+        /**
+         * The {@code JSONType} for JSON arrays.
+         */
+        ARRAY,
+        /**
+         * The {@code JSONType} for JSON booleans.
+         */
+        BOOLEAN,
+        /**
+         * The {@code JSONType} for JSON numbers.
+         */
+        NUMBER,
+        /**
+         * The {@code JSONType} for JSON strings.
+         */
+        STRING,
+        /**
+         * The {@code JSONType} for JSON nulls.
+         */
+        NULL
     }
 
     /**
@@ -188,17 +215,19 @@ public abstract class JSONEntry {
      *
      * @param indentLevel the amount of levels of indent; used internally to
      *                    determine how many spaces to place before text on newlines
-     * @param jsonFormat  formatting data used when generating text (see {@link JSONFormat})
+     * @param jsonFormat  formatting data used when generating text (see
+     *                    {@link JSONFormat})
      * @return a {@code String} representing this JSON entry
      */
     public abstract String toJSONText(int indentLevel, int jsonFormat);
 
     /**
-     * Generates a {@code String} that represents this JSON entry as a properly spaced
-     * and indented JSON text that can be saved to a file. An indent level of {@code 0}
-     * will be used.
+     * Generates a {@code String} that represents this JSON entry as a properly
+     * spaced and indented JSON text that can be saved to a file. An indent level of
+     * {@code 0} will be used.
      * 
-     * @param jsonFormat formatting data used when generating text (see {@link JSONFormat})
+     * @param jsonFormat formatting data used when generating text (see
+     *                   {@link JSONFormat})
      * @return a {@code String} representing this JSON entry
      */
     public String toJSONText(int jsonFormat) {
@@ -206,9 +235,9 @@ public abstract class JSONEntry {
     }
 
     /**
-     * Generates a {@code String} that represents this JSON entry as a properly spaced
-     * and indented JSON text that can be saved to a file. An indent level of {@code 0}
-     * and default format options will be used.
+     * Generates a {@code String} that represents this JSON entry as a properly
+     * spaced and indented JSON text that can be saved to a file. An indent level of
+     * {@code 0} and default format options will be used.
      * 
      * @return a {@code String} representing this JSON entry
      */
