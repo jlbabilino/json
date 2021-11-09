@@ -249,6 +249,7 @@ public final class JSONSerializer {
                             }
                             entry = new JSONArray(arrayEntries);
                         }
+                        break;
                     default:
                         entryMode: {
                             for (Field field : fields) {
