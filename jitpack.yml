@@ -1,5 +1,5 @@
 # Thanks to GitHub user sormuras for this script!
-# Temporarily disabled for testing
-# before_install:
-# - wget https://github.com/sormuras/bach/raw/master/install-jdk.sh
-# - source ./install-jdk.sh --url "https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.tar.gz"
+# old arguments: https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.tar.gz
+before_install:
+ - wget https://github.com/sormuras/bach/raw/master/install-jdk.sh
+ - source ./install-jdk.sh --feature 11
