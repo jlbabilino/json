@@ -17,6 +17,7 @@ import java.util.HashMap;
  * This class takes Java object inputs and converts them to JSON. This is useful
  * for applications that need to save an object to a JSON file. JSON
  * deserialization can be used to convert this JSON data back to Java objects.
+ * </p>
  * <p>
  * A Java object may be serialized in several ways:
  * <ol>
@@ -56,6 +57,7 @@ import java.util.HashMap;
  * <li><b>String serialization</b>: Java strings will be serialized to
  * {@code JSONString} strings, completely preserving data.
  * </ol>
+ * </p>
  * <p>
  * If the serilializer is unable to use any of the above methods, it will first
  * attempt to automatically serialize the object. This is a good method for
@@ -64,6 +66,7 @@ import java.util.HashMap;
  * return anything but {@code void}, and have zero parameters. It will then get
  * the substring after "get" to use for the key in the JSON object entry, then
  * it will invoke the method and serialize the result for the value.
+ * </p>
  * <p>
  * Custom serialization is the core of the second main part of this library,
  * JSON serialization. As previously mentioned, you must mark a class with
@@ -71,15 +74,17 @@ import java.util.HashMap;
  * serialization. The annotation has one property, {@code rootType}, which
  * indicates the JSON entry type you want the object to be serialized to. This
  * property defaults to {@code JSONEntry.JSONType.OBJECT}.
+ * </p>
  * <p>
- * For all JSON entry
- * types, a single {@code SerializedJSONEntry} annotation can be used to
- * indicate that a public field or method should be serialized and used as the
- * serialization of the object. These public fields or methods must be
- * accessible, and the methods must have zero parameters and not return
- * {@code void.class}. This annotation is particularly helpful with objects and arrays
- * where the size, indicies, and keys are specific to the Java object. Basically, it allows you
- * to make variable length JSON arrays and dynamic JSON objects.
+ * For all JSON entry types, a single {@code SerializedJSONEntry} annotation can
+ * be used to indicate that a public field or method should be serialized and
+ * used as the serialization of the object. These public fields or methods must
+ * be accessible, and the methods must have zero parameters and not return
+ * {@code void.class}. This annotation is particularly helpful with objects and
+ * arrays where the size, indicies, and keys are specific to the Java object.
+ * Basically, it allows you to make variable length JSON arrays and dynamic JSON
+ * objects.
+ * </p>
  * <p>
  * For classes that serialize to JSON objects, multiple fields and methods (of
  * the same requirements) can be annotated with
@@ -89,9 +94,10 @@ import java.util.HashMap;
  * {@code String} that should be used as the key in the key-value pair. The
  * value of the field or result of the method will be serialized and used as the
  * value.
+ * </p>
  * <p>
- * Similarly, for classes that serialize to JSON arrays, multiple fields
- * and methods (of the same requirements) can be annotated with
+ * Similarly, for classes that serialize to JSON arrays, multiple fields and
+ * methods (of the same requirements) can be annotated with
  * {@code SerializedJSONArrayItem} to indicate that they should be serialized
  * and placed in the new JSON array as an array item.
  * {@code SerializedJSONArrayItem} has one property, {@code index}, which is the
@@ -100,6 +106,15 @@ import java.util.HashMap;
  * the new array at the index specified. The size of the new JSON array is equal
  * to the largest index specified plus one, and any spaces not filled in the
  * middle will be filled with JSON nulls.
+ * </p>
+ * <p>
+ * Due to the recursive nature of JSON, serialization is also recursive. The
+ * methods that serialize Java objects are used recursively to serialize the
+ * fields of the object.
+ * </p>
+ * 
+ * @see JSONDeserializer
+ * @author Justin Babilino
  */
 public final class JSONSerializer {
 
