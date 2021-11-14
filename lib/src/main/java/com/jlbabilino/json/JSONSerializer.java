@@ -20,6 +20,7 @@ import java.util.HashMap;
  * </p>
  * <p>
  * A Java object may be serialized in several ways:
+ * </p>
  * <ol>
  * <li><b>Null serialization</b>: If the object is {@code null}, it will be
  * serialized as {@code JSONNull.NULL}
@@ -57,7 +58,6 @@ import java.util.HashMap;
  * <li><b>String serialization</b>: Java strings will be serialized to
  * {@code JSONString} strings, completely preserving data.
  * </ol>
- * </p>
  * <p>
  * If the serilializer is unable to use any of the above methods, it will first
  * attempt to automatically serialize the object. This is a good method for
