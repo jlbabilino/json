@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Triple Helix Robotics - FRC Team 2363
+ * Copyright (C) 2021 Justin Babilino
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
