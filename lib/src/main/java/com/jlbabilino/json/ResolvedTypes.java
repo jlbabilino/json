@@ -1,5 +1,6 @@
 package com.jlbabilino.json;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -26,7 +27,9 @@ final class ResolvedTypes {
     static Class<?> resolveClass(Type type) {
         Class<?> resolvedClass;
         if (type instanceof GenericArrayType) {
-            resolvedClass = resolveClass(((GenericArrayType) type).getGenericComponentType()).arrayType();
+            Class<?> componentType = resolveClass(((GenericArrayType) type).getGenericComponentType());
+            resolvedClass = Array.newInstance(componentType, 0).getClass();
+            // use Array.newInstance instead of Class.arrayType for compatibility
         } else if (type instanceof ParameterizedType) {
             resolvedClass = (Class<?>) ((ParameterizedType) type).getRawType();
             // not checking type variables, should be resolved before using this method
@@ -116,7 +119,8 @@ final class ResolvedTypes {
         } else if (type instanceof TypeVariable<?>) {
             arrayType = arrayOf(resolveType(type, typeVariableMap), typeVariableMap);
         } else if (type instanceof Class<?>) {
-            arrayType = ((Class<?>) type).arrayType();
+            Class<?> componentType = ((Class<?>) type);
+            arrayType = Array.newInstance(componentType, 0).getClass();
         } else {
             arrayType = null;
         }
