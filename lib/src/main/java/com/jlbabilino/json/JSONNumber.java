@@ -47,16 +47,36 @@ public class JSONNumber extends JSONEntry {
         return number;
     }
 
+    /**
+     * Returns {@code true} since this entry is a number.
+     * 
+     * @return {@code true}
+     */
     @Override
     public boolean isNumber() {
         return true;
     }
 
+    /**
+     * Returns {@code JSONType.NUMBER} since this entry is a number.
+     * 
+     * @return {@code JSONType.NUMBER}
+     */
     @Override
     public JSONType getType() {
         return JSONType.NUMBER;
     }
 
+    /**
+     * Returns the JSON string representation of this number, it is equivalent to:
+     * <pre>
+     * getNumber().toString()
+     * </pre>
+     * 
+     * @param indentLevel this parameter has no effect on the result or effect of this implementation of this method
+     * @param jsonFormat this parameter has no effect on the result or effect of this implementation of this method
+     * @return the number in JSON text form
+     */
     @Override
     public String toJSONText(int indentLevel, int jsonFormat) {
         return number.toString();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Triple Helix Robotics - FRC Team 2363
+ * Copyright (C) 2021 Justin Babilino
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ public class JSONObject extends JSONEntry {
     /**
      * Returns the underlying map of this JSON object. This method is
      * package-private because returning this map would allow the user to modify
-     * the map even though this type is meant to be immutable.
+     * the map, even though this type is meant to be immutable.
      * 
      * @return the map of this JSON object
      */
@@ -108,16 +108,50 @@ public class JSONObject extends JSONEntry {
         return map.isEmpty();
     }
 
+    /**
+     * Returns {@code true} since this entry is an object.
+     * 
+     * @return {@code true}
+     */
     @Override
     public boolean isObject() {
         return true;
     }
 
+    /**
+     * Returns {@code JSONType.OBJECT} since this entry is an object.
+     * 
+     * @return {@code JSONType.OBJECT}
+     */
     @Override
     public JSONType getType() {
         return JSONType.OBJECT;
     }
 
+    /**
+     * Generates a {@code String} that represents this JSON object. Creates curly
+     * braces around the object, and places all key-value pairs in random order, separated by
+     * commas. For example, some JSON object could be represented as
+     * <p>
+     * "{"entry": [9, 10], "hi": null, "json": true}"
+     * <p>
+     * Format options are availible for this method. There are three options that
+     * will affect the result of this method:
+     * <ol>
+     * <li>{@code indentLevel}: This tells the method which indent level the object
+     * is beginning on. For example, if this were the root JSON entry, then the
+     * indent level would be {@code 0}. If this object were a value associated with a
+     * key in a JSON object that were the root of the JSON, then the indent level
+     * would be {@code 1} because it is one level inside the JSON.
+     * <li>{@code indentSpaces}
+     * <li>{@code objectNewlinePerItem}
+     * <li>{@code objectBeginOnNewline}
+     * </ol>
+     * 
+     * @param indentLevel the indent level of the object declaration ({)
+     * @param jsonFormat formatting options
+     * @return the string representation of this JSON object
+     */
     @Override
     public String toJSONText(int indentLevel, int jsonFormat) {
         if (map.isEmpty()) {
@@ -136,7 +170,7 @@ public class JSONObject extends JSONEntry {
                                                                                        // are on
 
         StringBuilder str = new StringBuilder();
-        if (JSONFormat.getObjectBeginOnNewline(jsonFormat) && indentLevel != 0) { // if this is the root entry (indent level is
+        if (JSONFormat.objectBeginOnNewline(jsonFormat) && indentLevel != 0) { // if this is the root entry (indent level is
                                                                           // 0) then don't enter down no matter what
             str.append(System.lineSeparator()).append(shortIndentBlock); // if the object should begin on a new line,
                                                                          // add a newline and short indent
@@ -145,7 +179,7 @@ public class JSONObject extends JSONEntry {
         str.append("{"); // add the initial open brace {
 
         String strBetweenItems;
-        if (JSONFormat.getObjectNewlinePerItem(jsonFormat)) {
+        if (JSONFormat.objectNewlinePerItem(jsonFormat)) {
             strBetweenItems = System.lineSeparator() + longIndentBlock; // if there should be newlines, insert them and
                                                                         // indent
             str.append(strBetweenItems);
@@ -166,7 +200,7 @@ public class JSONObject extends JSONEntry {
                     .append(entry.getValue().toJSONText(indentLevel + 1, jsonFormat)); // add the value
         });
 
-        if (JSONFormat.getObjectNewlinePerItem(jsonFormat)) {
+        if (JSONFormat.objectNewlinePerItem(jsonFormat)) {
             str.append(System.lineSeparator()).append(shortIndentBlock);
         }
 

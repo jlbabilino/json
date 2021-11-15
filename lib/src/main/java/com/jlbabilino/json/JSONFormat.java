@@ -17,22 +17,20 @@
 package com.jlbabilino.json;
 
 /**
+ * <p>
  * This class models all formatting options for JSON exporting. It allows for
  * the adjustment of indent spaces and array and object newline settings.
+ * </p>
+ * <p>
+ * Here are some things that I would like to add later:
+ * </p>
+ * <ol>
+ * <li>Number formatting</li>
+ * </ol>
  *
  * @author Justin Babilino
  */
 public class JSONFormat {
-    public static void main(String[] args) {
-        int formatCode = getFormatCode(8, false, true, false, true, false);
-        System.out.println("Indent spaces count: " + getIndentSpacesCount(formatCode));
-        System.out.println("Uses tabs: " + getUseTabs(formatCode));
-        System.out.println("Indent string: \"" + getIndentString(formatCode) + "\"");
-        System.out.println("Array newline per item: " + getArrayNewlinePerItem(formatCode));
-        System.out.println("Array begin on newline: " + getArrayBeginOnNewline(formatCode));
-        System.out.println("Object newline per item: " + getObjectNewlinePerItem(formatCode));
-        System.out.println("Object begin on newline: " + getObjectBeginOnNewline(formatCode));
-    }
 
     /**
      * Stores a cache of all possible indent strings that use spaces
@@ -144,7 +142,7 @@ public class JSONFormat {
      * @param jsonFormat the JSON format code
      * @return the {@code int} value of spaces
      */
-    public static int getIndentSpacesCount(int jsonFormat) {
+    public static int indentSpacesCount(int jsonFormat) {
         return jsonFormat & INDENT_SPACES_BITS;
     }
 
@@ -156,26 +154,8 @@ public class JSONFormat {
      * @return {@code true} if the JSON format code uses tabs, {@code false}
      *         otherwise
      */
-    public static boolean getUseTabs(int jsonFormat) {
+    public static boolean useTabs(int jsonFormat) {
         return (jsonFormat & USE_TABS_BIT) == USE_TABS_BIT;
-    }
-
-    /**
-     * Gets the indent string from a JSON format code. For example, if you put in a
-     * JSON format code with an indent spaces count of 6, then this method would
-     * return a {@code String} with six spaces.
-     * 
-     * @param jsonFormat the JSON format code
-     * @return the indent string
-     */
-    public static String getIndentString(int jsonFormat) {
-        int spacesCount = getIndentSpacesCount(jsonFormat);
-        boolean useTabs = getUseTabs(jsonFormat);
-        if (useTabs) {
-            return indentTabsStrings[spacesCount];
-        } else {
-            return indentSpacesStrings[spacesCount];
-        }
     }
 
     /**
@@ -186,7 +166,7 @@ public class JSONFormat {
      * @return {@code true} if the JSON format code uses newlines between array
      *         items, {@code false} otherwise
      */
-    public static boolean getArrayNewlinePerItem(int jsonFormat) {
+    public static boolean arrayNewlinePerItem(int jsonFormat) {
         return (jsonFormat & ARRAY_NEWLINE_PER_ITEM_BIT) == ARRAY_NEWLINE_PER_ITEM_BIT;
     }
 
@@ -198,7 +178,7 @@ public class JSONFormat {
      * @return {@code true} if the JSON format code begins arrays on newlines,
      *         {@code false} otherwise
      */
-    public static boolean getArrayBeginOnNewline(int jsonFormat) {
+    public static boolean arrayBeginOnNewline(int jsonFormat) {
         return (jsonFormat & ARRAY_BEGIN_ON_NEWLINE_BIT) == ARRAY_BEGIN_ON_NEWLINE_BIT;
     }
 
@@ -210,7 +190,7 @@ public class JSONFormat {
      * @return {@code true} if the JSON format code uses newlines between object
      *         items, {@code false} otherwise
      */
-    public static boolean getObjectNewlinePerItem(int jsonFormat) {
+    public static boolean objectNewlinePerItem(int jsonFormat) {
         return (jsonFormat & OBJECT_NEWLINE_PER_ITEM_BIT) == OBJECT_NEWLINE_PER_ITEM_BIT;
     }
 
@@ -222,7 +202,26 @@ public class JSONFormat {
      * @return {@code true} if the JSON format code begins objects on newlines,
      *         {@code false} otherwise
      */
-    public static boolean getObjectBeginOnNewline(int jsonFormat) {
+    public static boolean objectBeginOnNewline(int jsonFormat) {
         return (jsonFormat & OBJECT_BEGIN_ON_NEWLINE_BIT) == OBJECT_BEGIN_ON_NEWLINE_BIT;
+    }
+
+    /**
+     * Gets the indent string from a JSON format code. For example, if you put in a
+     * JSON format code with an indent spaces count of 6 and useTabs set to false,
+     * then this method would return a {@code String} with six spaces. These strings
+     * are all cached in the system for memory efficiency.
+     * 
+     * @param jsonFormat the JSON format code
+     * @return the indent string
+     */
+    public static String getIndentString(int jsonFormat) {
+        int spacesCount = indentSpacesCount(jsonFormat);
+        boolean useTabs = useTabs(jsonFormat);
+        if (useTabs) {
+            return indentTabsStrings[spacesCount];
+        } else {
+            return indentSpacesStrings[spacesCount];
+        }
     }
 }

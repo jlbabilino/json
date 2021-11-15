@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Triple Helix Robotics - FRC Team 2363
+ * Copyright (C) 2021 Justin Babilino
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,7 @@ package com.jlbabilino.json;
  * <p>
  * Because of this property, all {@code JSONNull} values can be correctly
  * compared using the {@code ==} operator. To check if a {@code JSONEntry} is
- * {@code null}, you can either use the {@code isNull()} method or the
- * {@code ==} operator.
+ * {@code null}, you can either use {@code isNull()} or {@code == JSONNull.NULL}.
  *
  * @author Justin Babilino
  */
@@ -48,16 +47,33 @@ public class JSONNull extends JSONEntry {
     private JSONNull() {
     }
 
+    /**
+     * Returns {@code true} since this entry is a null.
+     * 
+     * @return {@code true}
+     */
     @Override
     public boolean isNull() {
         return true;
     }
 
+    /**
+     * Returns {@code JSONType.NULL} since this entry is a null.
+     * 
+     * @return {@code JSONType.NULL}
+     */
     @Override
     public JSONType getType() {
         return JSONType.NULL;
     }
 
+    /**
+     * Returns "null", the null literal in JSON.
+     * 
+     * @param indentLevel this parameter has no effect on the result or effect of this implementation of this method
+     * @param jsonFormat this parameter has no effect on the result or effect of this implementation of this method
+     * @return "null"
+     */
     @Override
     public String toJSONText(int indentLevel, int jsonFormat) {
         return "null";

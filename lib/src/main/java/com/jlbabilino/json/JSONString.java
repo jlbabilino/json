@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Triple Helix Robotics - FRC Team 2363
+ * Copyright (C) 2021 Justin Babilino
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,16 +46,36 @@ public class JSONString extends JSONEntry {
         return string;
     }
 
+    /**
+     * Returns {@code true} since this entry is a string.
+     * 
+     * @return {@code true}
+     */
     @Override
     public boolean isString() {
         return true;
     }
 
+    /**
+     * Returns {@code JSONType.STRING} since this entry is a string.
+     * 
+     * @return {@code JSONType.STRING}
+     */
     @Override
     public JSONType getType() {
         return JSONType.STRING;
     }
 
+    /**
+     * Returns the string representation of this JSON text string. It is equivalent to:
+     * <pre>
+     * "\"" + getString() + "\""
+     * </pre>
+     * 
+     * @param indentLevel this parameter has no effect on the result or effect of this implementation of this method
+     * @param jsonFormat this parameter has no effect on the result or effect of this implementation of this method
+     * @return the string representation of this JSON text string
+     */
     @Override
     public String toJSONText(int indentLevel, int jsonFormat) {
         return "\"" + string + "\"";

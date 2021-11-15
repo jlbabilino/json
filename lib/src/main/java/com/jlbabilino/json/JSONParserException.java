@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Triple Helix Robotics - FRC Team 2363
+ * Copyright (C) 2021 Justin Babilino
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,12 +25,12 @@ package com.jlbabilino.json;
 public class JSONParserException extends RuntimeException {
 
     /**
-     * Constructs a <code>JSONNParserException</code> with a message to be
+     * Constructs a {@code JSONParserException} with a message to be
      * communicated to the user.
      *
      * @param index the index that the parsing error occurred
      * @param lineNumber the line number in the JSON where the error occurred
-     * @param message the <code>String</code> message communicated to the user
+     * @param message the {@code String} message communicated to the user
      */
     public JSONParserException(int index, int lineNumber, String message) {
         super("Error at index " + index + ", on line " + lineNumber + ", " + message);

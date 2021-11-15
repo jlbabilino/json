@@ -614,11 +614,11 @@ public class JSONDeserializer {
 
     /**
      * This method removes the escape sequences from JSON strings and returns strings that 
-     * contain the actual characters.
+     * contain the actual characters. This can be used both internally in deserialization and publicly by users.
      * 
-     * @param escapedString
-     * @return
-     * @throws JSONDeserializerException
+     * @param escapedString the escaped string to be unescaped
+     * @return the unescaped string
+     * @throws JSONDeserializerException if the string contains an invalid escape character
      */
     public static String unescapeString(String escapedString) throws JSONDeserializerException {
         StringBuilder unescapedString = new StringBuilder();

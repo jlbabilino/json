@@ -272,7 +272,7 @@ public class JSONParser {
      * This method parses a Number entry from block of number JSON text.
      * </p>
      *
-     * @return a <code>NumberJSONEntry</code> with the appropriate number value
+     * @return a {@code JSONNumber} with the appropriate number value
      * @throws JSONParserException if there is a syntax error in the number
      */
     private JSONNumber numberEntry() throws JSONParserException {
@@ -311,10 +311,10 @@ public class JSONParser {
      * JSON entry.
      * <p>
      * Parses a boolean string in a JSON and returns the appropriate
-     * <code>BooleanJSONEntry</code>.
+     * {@code JSONBoolean}.
      * 
      * @param value predicted value of JSON boolean
-     * @return a <code>BooleanJSONEntry</code> with the appropriate boolean value
+     * @return a {@code JSONBoolean} with the appropriate boolean value
      * @throws JSONParserException if there is a syntax error in the boolean
      */
     private JSONBoolean booleanEntry(boolean value) throws JSONParserException {
@@ -342,11 +342,11 @@ public class JSONParser {
      * </p>
      * <p>
      * This method verifies that the string at the index equals "null", skips past
-     * the null and returns a <code>NullJSONEntry</code>. If the string does not
-     * equal "null", throws a <code>JSONParserException</code>
+     * the null and returns {@code JSONNull.NULL}. If the string does not
+     * equal "null", throws a {@code JSONParserException}
      * </p>
      *
-     * @return a new <code>NullJSONEntry</code> to represent the null value
+     * @return {@code JSONNull.NULL}
      * @throws JSONParserException if the string does not contain "null"
      */
     protected JSONEntry nullEntry() throws JSONParserException {
@@ -363,7 +363,7 @@ public class JSONParser {
      * Returns the character at the index provided.
      *
      * @param index the index
-     * @return the character
+     * @return the character at the index
      */
     private char charAt(int index) {
         if (index >= jsonString.length()) {
@@ -391,12 +391,9 @@ public class JSONParser {
      *         otherwise
      */
     private boolean isCharNumber(char ch) {
-        return Character.isDigit(ch) || ch == '-' || ch == 'e' || ch == 'E' || ch == '.'; // technically this allows
-                                                                                          // other languages
-                                                                                          // but doesn't matter because
-                                                                                          // it will be
-                                                                                          // caught by numberEntry()
-                                                                                          // anyways
+        return Character.isDigit(ch) || ch == '-' || ch == 'e' || ch == 'E' || ch == '.';
+        // technically this allows other languages but doesn't
+        // matter because it will be caught by numberEntry() anyways
     }
 
     /**

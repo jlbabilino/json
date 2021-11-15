@@ -95,7 +95,7 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
     }
 
     /**
-     * This inner class is used by the {@code iterator()} method to generate
+     * This member class is used by the {@code iterator()} method to generate
      * iterators.
      */
     private class JSONArrayIterator implements Iterator<JSONEntry> {
@@ -112,15 +112,26 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
             index = 0;
         }
 
+        /**
+         * Returns {@code true} if there is another JSON entry availible in this iterator, {@code false} if no more are availible.
+         * 
+         * @return {@code true} if there is another JSON entry availible in this iterator, {@code false} if no more are availible
+         */
         @Override
         public boolean hasNext() {
             return index < array.length - 1;
         }
 
+        /**
+         * Retrieves the next JSON entry in this iterator. Throws an exception if {@code hasNext()} returns false.
+         * 
+         * @return the next JSON entry
+         * @throws NoSuchElementException if there are no more availible items in this iterator
+         */
         @Override
         public JSONEntry next() throws NoSuchElementException {
             if (hasNext()) {
-                return array[++index];
+                return array[++index]; // pretty neat huh?
             } else {
                 throw new NoSuchElementException("No more JSONEntry elements availible in the array.");
             }
@@ -150,7 +161,7 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
     /**
      * Generates a {@code String} that represents this JSON array. Creates square
      * brackets around the array, and places all values in order, separated by
-     * commas. For example, a JSON array could be represented as
+     * commas. For example, some JSON array could be represented as
      * <p>
      * "[1.4, null, "stringy", {"entry": 10}]"
      * <p>
@@ -158,15 +169,18 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
      * will affect the result of this method:
      * <ol>
      * <li>{@code indentLevel}: This tells the method which indent level the array
-     * is beginning on. For example, if this was the root JSON entry, then the
+     * is beginning on. For example, if this were the root JSON entry, then the
      * indent level would be {@code 0}. If this array was a value associated with a
      * key in a JSON object that was the root of the JSON, then the indent level
      * would be {@code 1} because it is one level inside the JSON.
-     * <li>{@code format.indentSpaces}: This will affect the amount of spaces
-     * used when indenting.
-     * <li>{@code format.arrayNewlinePerItem}
-     * <li>{@code format.arrayBeginOnNewline}
+     * <li>{@code indentSpaces}
+     * <li>{@code arrayNewlinePerItem}
+     * <li>{@code arrayBeginOnNewline}
      * </ol>
+     * 
+     * @param indentLevel the indent level of the array declaration ([)
+     * @param jsonFormat formatting options
+     * @return the string representation of this JSON array
      */
     @Override
     public String toJSONText(int indentLevel, int jsonFormat) {
@@ -186,7 +200,7 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
 
         StringBuilder str = new StringBuilder(); // the JSON text string we are building
 
-        if (JSONFormat.getArrayBeginOnNewline(jsonFormat) && indentLevel != 0) { // if this is the root entry (indent level is
+        if (JSONFormat.arrayBeginOnNewline(jsonFormat) && indentLevel != 0) { // if this is the root entry (indent level is
                                                                          // 0) then don't enter down no matter what
             str.append(System.lineSeparator()).append(shortIndentBlock); // if the array should begin on a new line, add
                                                                          // a newline and short indent
@@ -195,7 +209,7 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
 
         String strBetweenItems; // this string goes after the comma and before the next item in arrays. It
                                 // changes depending on the format
-        if (JSONFormat.getArrayNewlinePerItem(jsonFormat)) {
+        if (JSONFormat.arrayNewlinePerItem(jsonFormat)) {
             strBetweenItems = System.lineSeparator() + longIndentBlock; // if there should be newlines between items,
                                                                         // modify strBetweenItms
             str.append(strBetweenItems);
@@ -212,7 +226,7 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
                                                                                                            // item
         }
 
-        if (JSONFormat.getArrayNewlinePerItem(jsonFormat)) {
+        if (JSONFormat.arrayNewlinePerItem(jsonFormat)) {
             str.append(System.lineSeparator()).append(shortIndentBlock); // only place close bracket ] on newline if
                                                                          // each item has been on a new line
         }
