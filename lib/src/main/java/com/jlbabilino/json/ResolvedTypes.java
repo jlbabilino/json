@@ -152,7 +152,7 @@ final class ResolvedTypes {
     static ResolvedParameterizedType resolveParameterizedType(ParameterizedType parameterizedType,
             Map<TypeVariable<?>, Type> typeVariableMap) {
         Type ownerType;
-        Type rawType;
+        Class<?> rawType;
         Type[] resolvedTypeParameters;
 
         Type parameterizedTypeOwnerType = parameterizedType.getOwnerType();
@@ -161,7 +161,7 @@ final class ResolvedTypes {
         } else {
             ownerType = null;
         }
-        rawType = parameterizedType.getRawType();
+        rawType = (Class<?>) parameterizedType.getRawType();
         Type[] unresolvedTypeParameters = parameterizedType.getActualTypeArguments();
         int typeParametersLength = unresolvedTypeParameters.length;
         resolvedTypeParameters = new Type[unresolvedTypeParameters.length];
@@ -171,10 +171,28 @@ final class ResolvedTypes {
         return new ResolvedParameterizedType(ownerType, rawType, resolvedTypeParameters);
     }
 
+    /**
+     * Resolves a type variable by mapping it to its resolved type in a type
+     * variable map. Recursive type will result in an outputted type varaible, which
+     * will not resolve the type, so don't put those in.
+     * 
+     * @param typeVariable    the type variable to resolve
+     * @param typeVariableMap the map to link type variables with resolved types
+     * @return the resolved type
+     */
     static Type resolveTypeVariable(TypeVariable<?> typeVariable, Map<TypeVariable<?>, Type> typeVariableMap) {
         return typeVariableMap.get(typeVariable);
     }
 
+    /**
+     * Resolves an unresolved wildcard type by replacing type variables with mapped
+     * types. Recursive type variables will result in an unresolved
+     * {@code ResolvedWildcardType}, so don't do that.
+     * 
+     * @param wildcardType    the wildcard type to resolve
+     * @param typeVariableMap the map to link type variables with resolved types
+     * @return the resolved wildcard type
+     */
     static ResolvedWildcardType resolveWildcardType(WildcardType wildcardType,
             Map<TypeVariable<?>, Type> typeVariableMap) {
         Type[] lowerBounds = wildcardType.getLowerBounds();
@@ -220,6 +238,16 @@ final class ResolvedTypes {
         return arrayType;
     }
 
+    /**
+     * Determines if the given type contains any type variables. It returns
+     * {@code true} if there are no type variables, and {@code false} otherwise. In
+     * this library, the word "resolved" is often used to mean that there are no
+     * type variables in a Java type.
+     * 
+     * @param type the type to check
+     * @return {@code true} if {@code type} contains no type variables, and
+     *         {@code false} otherwise
+     */
     static boolean isResolved(Type type) {
         if (type instanceof GenericArrayType) {
             return isResolved(((GenericArrayType) type).getGenericComponentType());
@@ -248,6 +276,14 @@ final class ResolvedTypes {
         }
     }
 
+    /**
+     * Determines if several types are ALL resolved. This method checks each type
+     * with {@code isResolved(Type)}.
+     * 
+     * @param types the types to check
+     * @return {@code true} if all types given are resolved, {@code false} if any
+     *         are not resovled
+     */
     private static boolean isResolved(Type... types) {
         for (Type type : types) {
             if (!isResolved(type)) {
@@ -255,5 +291,21 @@ final class ResolvedTypes {
             }
         }
         return true;
+    }
+
+    /**
+     * Represents a Java type as a string.
+     * 
+     * @param type the type to convert to a string
+     * @return the {@code String} representation
+     */
+    static String asString(Type type) {
+        String str;
+        if (type instanceof Class<?>) {
+            str = ((Class<?>) type).getCanonicalName();
+        } else {
+            str = type.toString();
+        }
+        return str;
     }
 }

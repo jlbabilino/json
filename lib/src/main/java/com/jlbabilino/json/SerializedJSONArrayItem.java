@@ -22,8 +22,22 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * This annotation is used to indicate that a field value or method return value
+ * should be serialized into JSON. It can only be used with Java classes that
+ * are {@link JSONSerializable} for JSON arrays. {@code index()} indicates the
+ * index where the serialized JSON should be placed in the new JSON array.
+ * 
+ * @see JSONSerializer
+ * @author Justin Babilino
+ */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD, ElementType.METHOD})
+@Target({ ElementType.FIELD, ElementType.METHOD })
 public @interface SerializedJSONArrayItem {
+    /**
+     * Indicates where the serialized JSON should be placed in the new JSON array.
+     * 
+     * @return the index in the new JSON array
+     */
     public int index();
 }
