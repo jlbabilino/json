@@ -25,11 +25,21 @@ import java.lang.annotation.Target;
 
 /**
  * This annotation is used to indicate that a field value or method return value
- * should be serialized into JSON.
+ * should be serialized into JSON. It can only be used with Java classes that
+ * are {@link JSONSerializable} for JSON objects. {@code key()} indicates the
+ * string key where the serialized JSON should be placed in the new JSON object.
+ * 
+ * @see JSONSerializer
+ * @author Justin Babilino
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD})
 public @interface SerializedJSONObjectValue {
+    /**
+     * The key where the serialized JSON should be linked to.
+     * 
+     * @return the {@code String} key
+     */
     public String key();
 }

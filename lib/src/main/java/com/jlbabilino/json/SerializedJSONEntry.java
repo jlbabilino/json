@@ -24,7 +24,11 @@ import java.lang.annotation.Target;
 
 /**
  * This annotation is used to indicate that a field value or method return value
- * should be serialized into JSON. 
+ * should be serialized into JSON. The value should be serialized to whatever
+ * JSON type that the class is {@link JSONSerializable} for.
+ * 
+ * @see JSONSerializer
+ * @author Justin Babilino
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD})
