@@ -73,6 +73,13 @@ loadScripts(document, 'script');</script>
 <div class="type-signature"><span class="annotations"><a href="https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/lang/annotation/Retention.html" title="class or interface in java.lang.annotation" class="external-link">@Retention</a>(<a href="https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/lang/annotation/RetentionPolicy.html#RUNTIME" title="class or interface in java.lang.annotation" class="external-link">RUNTIME</a>)
 <a href="https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/lang/annotation/Target.html" title="class or interface in java.lang.annotation" class="external-link">@Target</a>({<a href="https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/lang/annotation/ElementType.html#FIELD" title="class or interface in java.lang.annotation" class="external-link">FIELD</a>,<a href="https://docs.oracle.com/en/java/javase/16/docs/api/java.base/java/lang/annotation/ElementType.html#METHOD" title="class or interface in java.lang.annotation" class="external-link">METHOD</a>})
 </span><span class="modifiers">public @interface </span><span class="element-name type-name-label">SerializedJSONEntry</span></div>
+<div class="block">This annotation is used to indicate that a field value or method return value
+ should be serialized into JSON. The value should be serialized to whatever
+ JSON type that the class is <a href="JSONSerializable.html" title="annotation in com.jlbabilino.json"><code>JSONSerializable</code></a> for.</div>
+<dl class="notes">
+<dt>See Also:</dt>
+<dd><a href="JSONSerializer.html" title="class in com.jlbabilino.json"><code>JSONSerializer</code></a></dd>
+</dl>
 </section>
 <!-- ========= END OF CLASS DATA ========= -->
 </main>
