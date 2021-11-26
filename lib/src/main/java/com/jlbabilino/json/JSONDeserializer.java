@@ -420,7 +420,7 @@ public class JSONDeserializer {
                     }
                 } else if (baseClass == String.class) {
                     if (jsonEntry.isString()) {
-                        deserializedObject = ((JSONString) jsonEntry).getString();
+                        deserializedObject = unescapeString(((JSONString) jsonEntry).getString());
                     } else {
                         deserializedObject = jsonEntry.toString();
                     }
