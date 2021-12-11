@@ -1,4 +1,4 @@
 # Welcome to JSON!
 ## Links:
-### Javadoc: https://jlbabilino.github.io/json
-### Documentation: Not availible yet, but will be soon!
+### [Javadoc](https://jlbabilino.github.io/json)
+### [Documentation](https://github.com/jlbabilino/json/wiki)
