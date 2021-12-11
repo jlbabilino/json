@@ -9,6 +9,7 @@ build
 
 # Ignore VS Code settings directories or files
 .settings
+.vscode
 
 # Ignore .classpath
 .classpath
