@@ -41,6 +41,8 @@ import java.util.HashMap;
  * each item, invoking {@code toString()} on the key to be used as the key in
  * the JSON object, and serializing the value to be used for the value in the
  * JSON object.
+ * <li><b>Enum serialization</b>: Java enums will be serialized to JSON strings
+ * of the same value as their enumeration name.
  * <li><b>Array serialization</b>: Arrays will be serialized to JSON arrays,
  * with each value collected through iteration on the array, then on each item,
  * serializing the item to be placed in the JSON array. Ordering will always be
@@ -326,6 +328,8 @@ public final class JSONSerializer {
                     }
                 }
                 entry = new JSONObject(objectMap);
+            } else if (cls.isEnum()) {
+                entry = new JSONString(obj.toString());
             } else if (cls.isArray()) {
                 int arrayLength = Array.getLength(obj);
                 JSONEntry[] arrayArray = new JSONEntry[arrayLength];
