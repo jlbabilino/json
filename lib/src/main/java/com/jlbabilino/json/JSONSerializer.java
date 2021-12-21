@@ -1,16 +1,18 @@
 package com.jlbabilino.json;
 
+import static com.jlbabilino.json.JSONAnnotations.getJSONAnnotation;
+import static com.jlbabilino.json.JSONAnnotations.isJSONAnnotationPresent;
 import static com.jlbabilino.json.JSONNull.NULL;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.jlbabilino.json.JSONEntry.JSONType;
-
-import java.util.Collection;
-import java.util.HashMap;
 
 /**
  * <p>
@@ -151,7 +153,7 @@ public final class JSONSerializer {
             if (cls.isAnnotationPresent(JSONSerializable.class)) {
                 JSONType jsonType = cls.getAnnotation(JSONSerializable.class).rootType();
                 if (jsonType == JSONType.NULL) {
-                    entry = NULL; // just why would you ever do this...
+                    entry = NULL; // just why would you EVER do this...
                 } else {
                     Field[] fields = cls.getFields(); // no need to check for accessiblity since using these methods
                     Method[] methods = cls.getMethods();
@@ -181,7 +183,7 @@ public final class JSONSerializer {
                             }
                             for (Method method : methods) {
                                 if (method.getParameterCount() == 0 && method.getReturnType() != void.class) {
-                                    if (method.isAnnotationPresent(SerializedJSONEntry.class)) {
+                                    if (isJSONAnnotationPresent(SerializedJSONEntry.class, method)) {
                                         try {
                                             JSONEntry entryTest = serializeJSONEntry(method.invoke(obj));
                                             if (entryTest.getType() == jsonType) {
@@ -191,8 +193,8 @@ public final class JSONSerializer {
                                         } catch (IllegalAccessException | InvocationTargetException e) {
                                         }
                                     }
-                                    if (method.isAnnotationPresent(SerializedJSONObjectValue.class)) {
-                                        String key = method.getAnnotation(SerializedJSONObjectValue.class).key();
+                                    if (isJSONAnnotationPresent(SerializedJSONObjectValue.class, method)) {
+                                        String key = getJSONAnnotation(SerializedJSONObjectValue.class, method).key();
                                         try {
                                             JSONEntry entryTest = serializeJSONEntry(method.invoke(obj));
                                             objectMap.put(key, entryTest);
@@ -229,7 +231,7 @@ public final class JSONSerializer {
                             }
                             for (Method method : methods) {
                                 if (method.getParameterCount() == 0 && method.getReturnType() != void.class) {
-                                    if (method.isAnnotationPresent(SerializedJSONEntry.class)) {
+                                    if (isJSONAnnotationPresent(SerializedJSONEntry.class, method)) {
                                         try {
                                             JSONEntry entryTest = serializeJSONEntry(method.invoke(obj));
                                             if (entryTest.getType() == jsonType) {
@@ -239,8 +241,8 @@ public final class JSONSerializer {
                                         } catch (IllegalAccessException | InvocationTargetException e) {
                                         }
                                     }
-                                    if (method.isAnnotationPresent(SerializedJSONArrayItem.class)) {
-                                        int index = method.getAnnotation(SerializedJSONArrayItem.class).index();
+                                    if (isJSONAnnotationPresent(SerializedJSONArrayItem.class, method)) {
+                                        int index = getJSONAnnotation(SerializedJSONArrayItem.class, method).index();
                                         try {
                                             JSONEntry entryTest = serializeJSONEntry(method.invoke(obj));
                                             arrayMap.put(index, entryTest);
@@ -283,7 +285,7 @@ public final class JSONSerializer {
                             }
                             for (Method method : methods) {
                                 if (method.getParameterCount() == 0 && method.getReturnType() != void.class
-                                        && method.isAnnotationPresent(SerializedJSONEntry.class)) {
+                                        && isJSONAnnotationPresent(SerializedJSONEntry.class, method)) {
                                     try {
                                         JSONEntry entryTest = serializeJSONEntry(method.invoke(obj));
                                         if (entryTest.getType() == jsonType) {

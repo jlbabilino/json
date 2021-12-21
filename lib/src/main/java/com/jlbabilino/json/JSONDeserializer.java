@@ -19,6 +19,8 @@ package com.jlbabilino.json;
 import static com.jlbabilino.json.ResolvedTypes.isResolved;
 import static com.jlbabilino.json.ResolvedTypes.resolveClass;
 import static com.jlbabilino.json.ResolvedTypes.resolveType;
+import static com.jlbabilino.json.JSONAnnotations.getJSONAnnotation;
+import static com.jlbabilino.json.JSONAnnotations.isJSONAnnotationPresent;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -316,7 +318,7 @@ public class JSONDeserializer {
                             }
                         }
                         for (Method method : methods) {
-                            if (method.isAnnotationPresent(DeserializedJSONTarget.class)) {
+                            if (isJSONAnnotationPresent(DeserializedJSONTarget.class, method)) {
                                 Object[] preparedParameters = prepareParameters(jsonEntry, method, typeVariableMap);
                                 try {
                                     method.invoke(deserializedObject, preparedParameters);
