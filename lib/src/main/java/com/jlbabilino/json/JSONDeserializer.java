@@ -538,7 +538,7 @@ public class JSONDeserializer {
      *                   must agree with the TypeMarker
      * @param jsonString the string to parse and deserialize
      * @param typeMarker the type of Java object to create
-     * @return the newly created and populated Java object of type <T>
+     * @return the newly created and populated Java object of type T
      * @throws NullPointerException      if the string or type marker is null
      * @throws IllegalArgumentException  if the type marker contains an unresolved type variable
      * @throws JSONParserException       if there is a syntax error in the JSON in the string
@@ -557,7 +557,7 @@ public class JSONDeserializer {
      * @param <T>        the Java type that the JSON is being deserialized to; it must agree with the TypeMarker
      * @param jsonString the string to parse and deserialize
      * @param typeClass  the type of Java object to create
-     * @return the newly created and populated Java object of type <T>
+     * @return the newly created and populated Java object of type T
      * @throws NullPointerException      if the string or type marker is null
      * @throws JSONParserException       if there is a syntax error in the JSON in the string
      * @throws JSONDeserializerException if there is an error while deserializing
@@ -575,7 +575,7 @@ public class JSONDeserializer {
      * @param <T>        the Java type that the JSON is being deserialized to; it must agree with the TypeMarker
      * @param jsonFile   the file to parse and deserialize
      * @param typeMarker the type of Java object to create
-     * @return the newly created and populated Java object of type <T>
+     * @return the newly created and populated Java object of type T
      * @throws NullPointerException      if the file or type marker is null
      * @throws IllegalArgumentException  if the type marker contains an unresolved type variable
      * @throws IOException               if there is an error when reading the file
@@ -595,7 +595,7 @@ public class JSONDeserializer {
      * @param <T>       the Java type that the JSON is being deserialized to; it must agree with the TypeMarker
      * @param jsonFile  the file to parse and deserialize
      * @param typeClass the type of Java object to create
-     * @return the newly created and populated Java object of type <T>
+     * @return the newly created and populated Java object of type T
      * @throws NullPointerException      if the file or type marker is null
      * @throws IOException               if there is an error when reading the file
      * @throws JSONParserException       if there is a syntax error in the JSON in the file
