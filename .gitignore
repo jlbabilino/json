@@ -16,3 +16,6 @@ build
 
 # Ignore bin directory created by IDE
 bin
+
+# Ignore OS stuff
+.DS_Store
