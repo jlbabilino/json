@@ -4,6 +4,9 @@ import static com.jlbabilino.json.JSONAnnotations.getJSONAnnotation;
 import static com.jlbabilino.json.JSONAnnotations.isJSONAnnotationPresent;
 import static com.jlbabilino.json.JSONNull.NULL;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -373,5 +376,41 @@ public final class JSONSerializer {
             }
         }
         return entry;
+    }
+    
+    /**
+     * Serializes a Java object to a string; this method can be used as an implementation
+     * of the {@code toString()} method for {@code JSONSerializable} classes. It also is
+     * useful for debugging. For example, Java does not have a {@code toString()} method
+     * for arrays, but an array could be fed into this method to list its contents.
+     * 
+     * @param obj the object to serialize
+     * @return the serialized JSON string
+     */
+    public static String serializeString(Object obj) {
+        return serializeJSON(obj).exportJSON();
+    }
+
+    /**
+     * Serializes a Java object to a string, then writes the string to the file specified.
+     * 
+     * @param obj the object to serialize
+     * @param file the file to write the serialized data to
+     * @throws NullPointerException if the file is null
+     * @throws IOException if there is an error while writing the file
+     */
+    public static void serializeFile(Object obj, File file) throws NullPointerException, IOException {
+        if (file == null) {
+            throw new NullPointerException("File is null.");
+        }
+        file.createNewFile();
+        if (file.canWrite()) {
+            String str = serializeString(obj);
+            PrintWriter writer = new PrintWriter(file);
+            writer.print(str);
+            writer.close();
+        } else {
+            throw new IOException("Cannot write to file: " + file.getAbsolutePath());
+        }
     }
 }

@@ -16,12 +16,13 @@
  */
 package com.jlbabilino.json;
 
+import static com.jlbabilino.json.JSONAnnotations.isJSONAnnotationPresent;
 import static com.jlbabilino.json.ResolvedTypes.isResolved;
 import static com.jlbabilino.json.ResolvedTypes.resolveClass;
 import static com.jlbabilino.json.ResolvedTypes.resolveType;
-import static com.jlbabilino.json.JSONAnnotations.getJSONAnnotation;
-import static com.jlbabilino.json.JSONAnnotations.isJSONAnnotationPresent;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
@@ -79,9 +80,9 @@ public class JSONDeserializer {
      *                                   resolved (if it contains type variables)
      * @throws JSONDeserializerException if there is an error while deserializing
      */
-    public static <T> T deserializeJSON(JSON json, TypeMarker<T> typeMarker)
+    public static <T> T deserialize(JSON json, TypeMarker<T> typeMarker)
             throws NullPointerException, IllegalArgumentException, JSONDeserializerException {
-        return deserializeJSONEntry(json.getRoot(), typeMarker);
+        return deserialize(json.getRoot(), typeMarker);
     }
 
     /**
@@ -96,9 +97,9 @@ public class JSONDeserializer {
      * @throws NullPointerException      if the JSON or type class is {@code null}
      * @throws JSONDeserializerException if there is an error while deserializing
      */
-    public static <T> T deserializeJSON(JSON json, Class<T> typeClass)
+    public static <T> T deserialize(JSON json, Class<T> typeClass)
             throws NullPointerException, JSONDeserializerException {
-        return deserializeJSONEntry(json.getRoot(), typeClass);
+        return deserialize(json.getRoot(), typeClass);
     }
 
     /**
@@ -116,7 +117,7 @@ public class JSONDeserializer {
      *                                   {@code null}
      * @throws JSONDeserializerException if there is an error while deserializing.
      */
-    private static Object deserializeJSONEntry(JSONEntry jsonEntry, Type deserializedType)
+    private static Object deserialize(JSONEntry jsonEntry, Type deserializedType)
             throws NullPointerException, JSONDeserializerException {
         if (jsonEntry == null) {
             throw new NullPointerException("The JSON entry being deserialized is null");
@@ -142,7 +143,7 @@ public class JSONDeserializer {
                 Object newArray = Array.newInstance(baseClass.getComponentType(), arrayLength);
                 Type genericComponentType = ((GenericArrayType) deserializedType).getGenericComponentType();
                 for (int i = 0; i < arrayLength; i++) {
-                    Array.set(newArray, i, deserializeJSONEntry(arrayEntries[i], genericComponentType));
+                    Array.set(newArray, i, deserialize(arrayEntries[i], genericComponentType));
                 }
                 deserializedObject = newArray;
             } else {
@@ -227,7 +228,7 @@ public class JSONDeserializer {
                                     // all conditions are met at this point
                                     try {
                                         TypeMarker<?> determinedType = (TypeMarker<?>) method.invoke(null, jsonEntry);
-                                        deserializedObject = deserializeJSONEntry(jsonEntry, determinedType);
+                                        deserializedObject = deserialize(jsonEntry, determinedType);
                                     } catch (IllegalAccessException e) {
                                         // I'm still not quite sure if this is possible. Let me know if you know.
                                         throw new JSONDeserializerException("Could not invoke determiner "
@@ -308,7 +309,7 @@ public class JSONDeserializer {
                             }
                             if (entry != null) { // if one of the deserialized annotations was used
                                 Type resolvedType = resolveType(field.getGenericType(), typeVariableMap);
-                                Object newValue = deserializeJSONEntry(entry, resolvedType);
+                                Object newValue = deserialize(entry, resolvedType);
                                 try {
                                     field.set(deserializedObject, newValue);
                                 } catch (IllegalAccessException e) {
@@ -343,7 +344,7 @@ public class JSONDeserializer {
                     Type listType = typeVariableMap.get(LIST_TYPE_VARIABLE);
                     List<Object> newList = new ArrayList<>();
                     for (JSONEntry arrayEntry : arrayEntries) {
-                        newList.add(deserializeJSONEntry(arrayEntry, listType));
+                        newList.add(deserialize(arrayEntry, listType));
                     }
                     deserializedObject = newList;
                 } else if (Set.class.isAssignableFrom(baseClass)) {
@@ -359,7 +360,7 @@ public class JSONDeserializer {
                     int arrayEntriesCount = arrayJSONEntries.length;
                     Object array = Array.newInstance(arrayComponentType, arrayEntriesCount);
                     for (int i = 0; i < arrayEntriesCount; i++) {
-                        Array.set(array, i, deserializeJSONEntry(arrayJSONEntries[i], arrayComponentType));
+                        Array.set(array, i, deserialize(arrayJSONEntries[i], arrayComponentType));
                     }
                     deserializedObject = array;
                 } else if (baseClass.isPrimitive()) {
@@ -495,7 +496,7 @@ public class JSONDeserializer {
      *                                   resolved (if it contains type variables)
      * @throws JSONDeserializerException if there is an error while deserializing
      */
-    public static <T> T deserializeJSONEntry(JSONEntry jsonEntry, TypeMarker<T> typeMarker)
+    public static <T> T deserialize(JSONEntry jsonEntry, TypeMarker<T> typeMarker)
             throws NullPointerException, IllegalArgumentException, JSONDeserializerException {
         if (typeMarker == null) {
             throw new NullPointerException("Type marker is null.");
@@ -506,7 +507,7 @@ public class JSONDeserializer {
                     "The Type Marker provided is not completely resolved. Please remove all type variables from the declaration of the TypeMarker.");
         }
         @SuppressWarnings("unchecked")
-        T castObject = (T) deserializeJSONEntry(jsonEntry, deserializedType);
+        T castObject = (T) deserialize(jsonEntry, deserializedType);
         return castObject;
     }
 
@@ -522,11 +523,88 @@ public class JSONDeserializer {
      * @throws NullPointerException      if the JSON or type class is {@code null}
      * @throws JSONDeserializerException if there is an error while deserializing
      */
-    public static <T> T deserializeJSONEntry(JSONEntry jsonEntry, Class<T> typeClass)
+    public static <T> T deserialize(JSONEntry jsonEntry, Class<T> typeClass)
             throws NullPointerException, JSONDeserializerException {
         @SuppressWarnings("unchecked")
-        T castObject = (T) deserializeJSONEntry(jsonEntry, (Type) typeClass); // cast avoids ambiguity
+        T castObject = (T) deserialize(jsonEntry, (Type) typeClass); // cast avoids ambiguity
         return castObject;
+    }
+
+    /**
+     * Parses a string using {@link JSONParser}, then deserializes the JSON to an object of
+     * the type specified in the {@code TypeMarker}.
+     * 
+     * @param <T>        the Java type that the JSON is being deserialized to; it 
+     *                   must agree with the TypeMarker
+     * @param jsonString the string to parse and deserialize
+     * @param typeMarker the type of Java object to create
+     * @return the newly created and populated Java object of type <T>
+     * @throws NullPointerException      if the string or type marker is null
+     * @throws IllegalArgumentException  if the type marker contains an unresolved type variable
+     * @throws JSONParserException       if there is a syntax error in the JSON in the string
+     * @throws JSONDeserializerException if there is an error while deserializing
+     */
+    public static <T> T deserialize(String jsonString, TypeMarker<T> typeMarker) throws
+            NullPointerException, IllegalArgumentException, JSONParserException, JSONDeserializerException {
+        JSON json = JSONParser.parseJSON(jsonString);
+        return deserialize(json, typeMarker);
+    }
+
+    /**
+     * Parses a string using {@link JSONParser}, then deserializes the JSON to an object of
+     * the type specified in the {@code Class}.
+     * 
+     * @param <T>        the Java type that the JSON is being deserialized to; it must agree with the TypeMarker
+     * @param jsonString the string to parse and deserialize
+     * @param typeClass  the type of Java object to create
+     * @return the newly created and populated Java object of type <T>
+     * @throws NullPointerException      if the string or type marker is null
+     * @throws JSONParserException       if there is a syntax error in the JSON in the string
+     * @throws JSONDeserializerException if there is an error while deserializing
+     */
+    public static <T> T deserialize(String jsonString, Class<T> typeClass) throws
+            NullPointerException, JSONParserException, JSONDeserializerException {
+        JSON json = JSONParser.parseJSON(jsonString);
+        return deserialize(json, typeClass);
+    }
+
+    /**
+     * Parses the contents of the file as a string using {@link JSONParser}, then deserializes the
+     * JSON to an object of the type specified in the {@code TypeMarker}.
+     * 
+     * @param <T>        the Java type that the JSON is being deserialized to; it must agree with the TypeMarker
+     * @param jsonFile   the file to parse and deserialize
+     * @param typeMarker the type of Java object to create
+     * @return the newly created and populated Java object of type <T>
+     * @throws NullPointerException      if the file or type marker is null
+     * @throws IllegalArgumentException  if the type marker contains an unresolved type variable
+     * @throws IOException               if there is an error when reading the file
+     * @throws JSONParserException       if there is a syntax error in the JSON in the file
+     * @throws JSONDeserializerException if there is an error while deserializing
+     */
+    public static <T> T deserialize(File jsonFile, TypeMarker<T> typeMarker) throws
+            NullPointerException, IllegalArgumentException, IOException, JSONParserException, JSONDeserializerException {
+        JSON json = JSONParser.parseJSON(jsonFile);
+        return deserialize(json, typeMarker);
+    }
+
+    /**
+     * Parses the contents of the file as a string using {@link JSONParser}, then deserializes the
+     * JSON to an object of the type specified in the {@code Class}.
+     * 
+     * @param <T>       the Java type that the JSON is being deserialized to; it must agree with the TypeMarker
+     * @param jsonFile  the file to parse and deserialize
+     * @param typeClass the type of Java object to create
+     * @return the newly created and populated Java object of type <T>
+     * @throws NullPointerException      if the file or type marker is null
+     * @throws IOException               if there is an error when reading the file
+     * @throws JSONParserException       if there is a syntax error in the JSON in the file
+     * @throws JSONDeserializerException if there is an error while deserializing
+     */
+    public static <T> T deserialize(File jsonFile, Class<T> typeClass) throws
+            NullPointerException, IOException, JSONParserException, JSONDeserializerException {
+        JSON json = JSONParser.parseJSON(jsonFile);
+        return deserialize(json, typeClass);
     }
 
     /**
@@ -581,7 +659,7 @@ public class JSONDeserializer {
                 throw new JSONDeserializerException("All parameters of a method annotated with \"DeserializedJSONTarget\" must be annotated with \"DeserializedJSONObjectValue\", \"DeserializedJSONArrayItem\", or \"DeserializedJSONEntry\".");
             }
             Type resolvedParameterType = resolveType(parameters[i].getParameterizedType(), typeVariableMap);
-            preparedParameters[i] = deserializeJSONEntry(entry, resolvedParameterType);
+            preparedParameters[i] = deserialize(entry, resolvedParameterType);
         }
         return preparedParameters;
     }

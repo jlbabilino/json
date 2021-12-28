@@ -18,8 +18,12 @@ package com.jlbabilino.json;
 
 import static com.jlbabilino.json.JSONNull.NULL;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -79,25 +83,120 @@ public class JSONParser {
      * used with this library.
      * 
      * @param jsonString the {@code String} data to parse from
-     * @return the parsed {@code JSON}
-     * @throws JSONParserException if there is an error in the string data
+     * @return the parsed {@code JSONEntry}
+     * @throws NullPointerException if the input is null
+     * @throws JSONParserException if there is a syntax error in the string data
      */
-    public static JSONEntry parseStringAsJSONEntry(String jsonString) throws JSONParserException {
+    public static JSONEntry parseJSONEntry(String jsonString) throws NullPointerException, JSONParserException {
+        if (jsonString == null) {
+            throw new NullPointerException("JSON string is null.");
+        }
         JSONParser parser = new JSONParser(jsonString);
         return parser.jsonEntry;
     }
 
     /**
-     * Parses a {@code String} containing JSON data as a {@link JSON} to be used
+     * Loads and parses a {@code File} containing JSON data as a {@link JSONEntry} to be
+     * used with this library.
+     * 
+     * @param jsonFile the {@code File} to parse from
+     * @return the parsed {@code JSONEntry}
+     * @throws NullPointerException if the input is null
+     * @throws IOException if there is an error loading the file
+     * @throws JSONParserException if there is a syntax error in the string data
+     */
+    public static JSONEntry parseJSONEntry(File jsonFile) throws NullPointerException, IOException, JSONParserException {
+        if (jsonFile == null) {
+            throw new NullPointerException("JSON file is null.");
+        }
+        return parseJSONEntry(Files.readString(jsonFile.toPath()));
+    }
+
+    /**
+     * Parses a byte array containing string JSON data as a {@link JSONEntry} to be used
      * with this library.
+     * 
+     * @param jsonBytes the {@code byte[]} to parse from
+     * @return the parsed {@code JSONEntry}
+     * @throws NullPointerException if the input is null
+     * @throws JSONParserException if there is a syntax error in the string data
+     */
+    public static JSONEntry parseJSONEntry(byte[] jsonBytes) throws NullPointerException, JSONParserException {
+        if (jsonBytes == null) {
+            throw new NullPointerException("JSON byte array is null.");
+        }
+        return parseJSONEntry(new String(jsonBytes));
+    }
+
+    /**
+     * Loads and parses an {@code InputStream} containing JSON data as a {@link JSONEntry} to be
+     * used with this library.
+     * 
+     * @param jsonInputStream the {@code InputStream} to parse from
+     * @return the parsed {@code JSONEntry}
+     * @throws NullPointerException if the input is null
+     * @throws IOException if there is an error while loading the input stream
+     * @throws JSONParserException if there is a syntax error in the string data
+     */
+    public static JSONEntry parseJSONEntry(InputStream jsonInputStream) throws NullPointerException, IOException, JSONParserException {
+        if (jsonInputStream == null) {
+            throw new NullPointerException("JSON input stream is null.");
+        }
+        return parseJSONEntry(jsonInputStream.readAllBytes());
+    }
+
+    /**
+     * Parses a {@code String} containing JSON data as a {@link JSON} to be
+     * used with this library.
      * 
      * @param jsonString the {@code String} data to parse from
      * @return the parsed {@code JSON}
-     * @throws JSONParserException if there is an error in the string data
+     * @throws NullPointerException if the input is null
+     * @throws JSONParserException if there is a syntax error in the string data
      */
-    public static JSON parseStringAsJSON(String jsonString) throws JSONParserException {
-        JSONParser parser = new JSONParser(jsonString);
-        return new JSON(parser.jsonEntry);
+    public static JSON parseJSON(String jsonString) throws NullPointerException, JSONParserException {
+        return new JSON(parseJSONEntry(jsonString));
+    }
+
+    /**
+     * Loads and parses a {@code File} containing JSON data as a {@link JSON} to be
+     * used with this library.
+     * 
+     * @param jsonFile the {@code File} to parse from
+     * @return the parsed {@code JSON}
+     * @throws NullPointerException if the input is null
+     * @throws IOException if there is an error loading the file
+     * @throws JSONParserException if there is a syntax error in the string data
+     */
+    public static JSON parseJSON(File jsonFile) throws NullPointerException, IOException, JSONParserException {
+        return new JSON(parseJSONEntry(jsonFile));
+    }
+
+    /**
+     * Parses a byte array containing string JSON data as a {@link JSON} to be used
+     * with this library.
+     * 
+     * @param jsonBytes the {@code byte[]} to parse from
+     * @return the parsed {@code JSON}
+     * @throws NullPointerException if the input is null
+     * @throws JSONParserException if there is a syntax error in the string data
+     */
+    public static JSON parseJSON(byte[] jsonBytes) throws NullPointerException, JSONParserException {
+        return new JSON(parseJSONEntry(jsonBytes));
+    }
+
+    /**
+     * Loads and parses an {@code InputStream} containing JSON data as a {@link JSONEntry} to be
+     * used with this library.
+     * 
+     * @param jsonInputStream the {@code InputStream} to parse from
+     * @return the parsed {@code JSONEntry}
+     * @throws NullPointerException if the input is null
+     * @throws IOException if there is an error while loading the input stream
+     * @throws JSONParserException if there is a syntax error in the string data
+     */
+    public static JSON parseJSON(InputStream jsonInputStream) throws NullPointerException, IOException, JSONParserException {
+        return new JSON(parseJSONEntry(jsonInputStream));
     }
 
     /**
