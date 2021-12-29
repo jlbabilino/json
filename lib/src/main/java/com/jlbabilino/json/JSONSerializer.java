@@ -403,7 +403,7 @@ public final class JSONSerializer {
         if (file == null) {
             throw new NullPointerException("File is null.");
         }
-        file.mkdirs();
+        file.getParentFile().mkdirs();
         file.createNewFile();
         if (file.canWrite()) {
             String str = serializeString(obj);
