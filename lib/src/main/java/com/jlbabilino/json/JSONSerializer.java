@@ -334,7 +334,7 @@ public final class JSONSerializer {
                 }
                 entry = new JSONObject(objectMap);
             } else if (cls.isEnum()) {
-                entry = new JSONString(obj.toString());
+                entry = new JSONString(escapeString(obj.toString()));
             } else if (cls.isArray()) {
                 int arrayLength = Array.getLength(obj);
                 JSONEntry[] arrayArray = new JSONEntry[arrayLength];
@@ -347,9 +347,9 @@ public final class JSONSerializer {
             } else if (obj instanceof Number) {
                 entry = new JSONNumber((Number) obj);
             } else if (obj instanceof Character) {
-                entry = new JSONString(Character.toString((Character) obj));
+                entry = new JSONString(escapeString(Character.toString((Character) obj)));
             } else if (obj instanceof String) {
-                entry = new JSONString((String) obj);
+                entry = new JSONString(escapeString((String) obj));
             } else { // automatic serialization
                 Method[] methods = cls.getMethods();
                 Map<String, JSONEntry> objectMap = new HashMap<>();
@@ -413,5 +413,66 @@ public final class JSONSerializer {
         } else {
             throw new IOException("Cannot write to file: " + file.getAbsolutePath());
         }
+    }
+
+    /**
+     * Converts a string with unescaped characters to a string with escaped characters by replacing
+     * characters that would cause problems in JSON with escape sequences like \n, \", etc.
+     * 
+     * @param unescapedString the string to escape
+     * @return the escaped string
+     * @throws NullPointerException if the unescaped string is null
+     */
+    public static String escapeString(String unescapedString) throws NullPointerException {
+        if (unescapedString == null) {
+            throw new NullPointerException("The unescaped string is null.");
+        }
+        StringBuilder escapedString = new StringBuilder();
+        int unescapedStringLength = unescapedString.length();
+        int i = 0;
+        int lastUnescapedCharNextIndex = 0;
+        while (i < unescapedStringLength) {
+            char charAtI = unescapedString.charAt(i);
+            switch (charAtI) {
+                case '"':
+                    escapedString.append(unescapedString.substring(lastUnescapedCharNextIndex, i));
+                    escapedString.append("\\\"");
+                    lastUnescapedCharNextIndex = i + 1;
+                    break;
+                case '\\':
+                    escapedString.append(unescapedString.substring(lastUnescapedCharNextIndex, i));
+                    escapedString.append("\\\\");
+                    lastUnescapedCharNextIndex = i + 1;
+                    break;
+                case '\b':
+                    escapedString.append(unescapedString.substring(lastUnescapedCharNextIndex, i));
+                    escapedString.append("\\b");
+                    lastUnescapedCharNextIndex = i + 1;
+                    break;
+                case '\f':
+                    escapedString.append(unescapedString.substring(lastUnescapedCharNextIndex, i));
+                    escapedString.append("\\f");
+                    lastUnescapedCharNextIndex = i + 1;
+                    break;
+                case '\n':
+                    escapedString.append(unescapedString.substring(lastUnescapedCharNextIndex, i));
+                    escapedString.append("\\n");
+                    lastUnescapedCharNextIndex = i + 1;
+                    break;
+                case '\r':
+                    escapedString.append(unescapedString.substring(lastUnescapedCharNextIndex, i));
+                    escapedString.append("\\r");
+                    lastUnescapedCharNextIndex = i + 1;
+                    break;
+                case '\t':
+                    escapedString.append(unescapedString.substring(lastUnescapedCharNextIndex, i));
+                    escapedString.append("\\t");
+                    lastUnescapedCharNextIndex = i + 1;
+                    break;
+            }
+            i++;
+        }
+        escapedString.append(unescapedString.substring(lastUnescapedCharNextIndex));
+        return escapedString.toString();
     }
 }

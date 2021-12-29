@@ -698,9 +698,13 @@ public class JSONDeserializer {
      * 
      * @param escapedString the escaped string to be unescaped
      * @return the unescaped string
+     * @throws NullPointerException if the escaped string is null
      * @throws JSONDeserializerException if the string contains an invalid escape character
      */
-    public static String unescapeString(String escapedString) throws JSONDeserializerException {
+    public static String unescapeString(String escapedString) throws NullPointerException, JSONDeserializerException {
+        if (escapedString == null) {
+            throw new NullPointerException("The escaped string is null.");
+        }
         StringBuilder unescapedString = new StringBuilder();
         int escapedStringLength = escapedString.length();
         int i = 0;
