@@ -20,8 +20,10 @@ final class JSONAnnotations {
             Method method = cls.getDeclaredMethod(methodName, parameterTypes);
             if (method.isAnnotationPresent(annotationClass)) {
                 return method.getAnnotation(annotationClass);
-            } else {
+            } else if (cls.getSuperclass() != null) {
                 return getJSONAnnotation(annotationClass, cls.getSuperclass(), methodName, parameterTypes);
+            } else {
+                return null;
             }
         } catch (NoSuchMethodException e) {
             return getJSONAnnotation(annotationClass, cls.getSuperclass(), methodName, parameterTypes);
