@@ -119,7 +119,7 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
          */
         @Override
         public boolean hasNext() {
-            return index < array.length - 1;
+            return index < array.length;
         }
 
         /**
@@ -131,7 +131,7 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
         @Override
         public JSONEntry next() throws NoSuchElementException {
             if (hasNext()) {
-                return array[++index]; // pretty neat huh?
+                return array[index++]; // pretty neat huh?
             } else {
                 throw new NoSuchElementException("No more JSONEntry elements availible in the array.");
             }
