@@ -473,6 +473,31 @@ public class JSONDeserializer {
                         throw new JSONDeserializerException(
                                 "Cannot conver JSON " + jsonEntry.getType() + " to Character.");
                     }
+                } else if (baseClass.isEnum()) {
+                    if (jsonEntry.isString()) {
+                        String rawStr = ((JSONString) jsonEntry).getString();
+                        String reducedStr = rawStr.replace("_", "").replace("-", "").replace(" ", "").toLowerCase();
+                        Enum<?>[] enumConstants = (Enum[]) baseClass.getEnumConstants();
+                        Enum<?> foundEnum = null;
+                        for (Enum<?> enumConstant : enumConstants) {
+                            String enumName = enumConstant.name().replace("_", "").replace("-", "").toLowerCase();
+                            String enumString = enumConstant.toString();
+                            if (reducedStr.equals(enumName) || rawStr.equals(enumString)) {
+                                foundEnum = enumConstant;
+                                break;
+                            }
+                        }
+                        if (foundEnum != null) {
+                            deserializedObject = foundEnum;
+                        } else {
+                            throw new JSONDeserializerException("Cannot convert JSON String " + jsonEntry +
+                                    " to enum constant of type " + baseClass.getCanonicalName() + 
+                                    "since there are no enum constants that have a similar name.");
+                        }
+                    } else {
+                        throw new JSONDeserializerException(
+                                "Cannot conver JSON " + jsonEntry.getType() + " to Enum value.");
+                    }
                 } else {
                     deserializedObject = null;
                 }
