@@ -37,6 +37,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -117,7 +118,7 @@ public class JSONDeserializer {
      *                                   {@code null}
      * @throws JSONDeserializerException if there is an error while deserializing.
      */
-    private static Object deserialize(JSONEntry jsonEntry, Type deserializedType)
+    private static Object deserialize(JSONEntry jsonEntry, Type deserializedType, boolean searchForDeterminer)
             throws NullPointerException, JSONDeserializerException {
         if (jsonEntry == null) {
             throw new NullPointerException("The JSON entry being deserialized is null");
@@ -127,6 +128,7 @@ public class JSONDeserializer {
         // Integer.class}.
         Map<TypeVariable<?>, Type> typeVariableMap = new HashMap<>();
         Class<?> baseClass = resolveClass(deserializedType);
+        TypeVariable<?>[] classTypeParameters = baseClass.getTypeParameters();
         Object deserializedObject;
         if (jsonEntry.isNull()) {
             deserializedObject = null;
@@ -143,13 +145,12 @@ public class JSONDeserializer {
                 Object newArray = Array.newInstance(baseClass.getComponentType(), arrayLength);
                 Type genericComponentType = ((GenericArrayType) deserializedType).getGenericComponentType();
                 for (int i = 0; i < arrayLength; i++) {
-                    Array.set(newArray, i, deserialize(arrayEntries[i], genericComponentType));
+                    Array.set(newArray, i, deserialize(arrayEntries[i], genericComponentType, true));
                 }
                 deserializedObject = newArray;
             } else {
                 if (deserializedType instanceof ParameterizedType) {
                     ParameterizedType parameterizedType = (ParameterizedType) deserializedType;
-                    TypeVariable<?>[] classTypeParameters = baseClass.getTypeParameters();
                     Type[] actualTypeParameters = parameterizedType.getActualTypeArguments();
                     for (int i = 0; i < classTypeParameters.length; i++) {
                         typeVariableMap.put(classTypeParameters[i], actualTypeParameters[i]);
@@ -165,171 +166,227 @@ public class JSONDeserializer {
                     Field[] fields = baseClass.getFields();
                     Method[] methods = baseClass.getMethods();
                     int baseClassModifiers = baseClass.getModifiers();
-                    if (baseClass.isInterface() || Modifier.isAbstract(baseClassModifiers)) {
-                        search: {
+                    objectInstantiation: {
+                        if (searchForDeterminer && !Modifier.isFinal(baseClassModifiers)) {
+                            // begin to search for determiner
                             for (Method method : methods) {
                                 if (method.isAnnotationPresent(DeserializedJSONDeterminer.class)) {
                                     int determinerModifiers = method.getModifiers();
                                     if (!Modifier.isStatic(determinerModifiers)) {
-                                        throw new JSONDeserializerException("Determiner " + method.getName() + " in "
+                                        throw new JSONDeserializerException("Determiner " + method.toGenericString() + " in "
                                                 + baseClass.getCanonicalName() + " must be a static method.");
-                                    }
-                                    if (method.getParameterCount() != 1 || method.getParameterTypes()[0] != JSONEntry
-                                            .classForJSONType(classJSONType)) {
-                                        throw new JSONDeserializerException("Determiner " + method.getName() + " in "
-                                                + baseClass.getCanonicalName()
-                                                + " must have exactly one parameter of the JSONEntry class associated with the JSONType that this class serializes to. For example, a class that serializes to OBJECT will need to have a parameter of type JSONObject.");
                                     }
                                     if (method.getExceptionTypes().length != 1
                                             || method.getExceptionTypes()[0] != JSONDeserializerException.class) {
-                                        throw new JSONDeserializerException("Determiner " + method.getName() + " in "
+                                        throw new JSONDeserializerException("Determiner " + method.toGenericString() + " in "
                                                 + baseClass.getCanonicalName()
                                                 + " must throw one exception of type JSONDeserializerException");
                                     }
-                                    if (method.getReturnType() != TypeMarker.class
-                                            || !(method.getGenericReturnType() instanceof ParameterizedType)) {
+                                    if (!(method.getReturnType() == TypeMarker.class || method.getReturnType() == Class.class) ||
+                                        !(method.getGenericReturnType() instanceof ParameterizedType)) {
                                         throw new JSONDeserializerException(
-                                                "Determiner " + method.getName() + " in " + baseClass.getCanonicalName()
-                                                        + " must return a parameterized TypeMarker<>");
+                                                "Determiner " + method.toGenericString() + " in " + baseClass.getCanonicalName()
+                                                        + " must return a parameterized Class<> or TypeMarker<>");
+                                    }
+                                    if (method.getTypeParameters().length != 0) {
+                                        throw new JSONDeserializerException("Determiner " + method.toGenericString() + " in "
+                                                + baseClass.getCanonicalName() + " should not be a generic method.");
                                     }
                                     ParameterizedType genericReturnType = (ParameterizedType) method
                                             .getGenericReturnType();
-                                    if (!(genericReturnType.getActualTypeArguments()[0] instanceof WildcardType)) {
-                                        throw new JSONDeserializerException(
-                                                "Determiner " + method.getName() + " in " + baseClass.getCanonicalName()
-                                                        + " must return a wildcard TypeMarker<?>.");
-                                    }
-                                    WildcardType typeMarkerWildcard = (WildcardType) genericReturnType
-                                            .getActualTypeArguments()[0];
-                                    Type wildcardUpperBound = typeMarkerWildcard.getUpperBounds()[0];
-                                    if (method.getTypeParameters().length != 0) {
-                                        throw new JSONDeserializerException("Determiner " + method.getName() + " in "
-                                                + baseClass.getCanonicalName() + " should not be a generic method.");
-                                    }
-                                    if (resolveClass(wildcardUpperBound) != baseClass) {
-                                        throw new JSONDeserializerException("Determiner " + method.getName() + " in "
-                                                + baseClass.getCanonicalName()
-                                                + "must return an upper bounded wildcard TypeMarker<? extends TYPE>, where TYPE is this interface or abstract class. TYPE may also be parameterized.");
-                                    }
-                                    if (wildcardUpperBound instanceof ParameterizedType) {
-                                        ParameterizedType parameterizedUpperBound = (ParameterizedType) wildcardUpperBound;
-                                        Type[] upperBoundTypeArguments = parameterizedUpperBound
-                                                .getActualTypeArguments();
-                                        for (Type typeArgument : upperBoundTypeArguments) {
-                                            if (!(typeArgument instanceof WildcardType)) {
-                                                throw new JSONDeserializerException("Determiner " + method.getName()
-                                                        + " in " + baseClass.getCanonicalName()
-                                                        + " returns a type that extends "
-                                                        + wildcardUpperBound.toString()
-                                                        + ", but there is a type parameter in the parameterized type that is not a wildcard. All type parameters here should be wildcards.");
-                                            }
+                                    if (genericReturnType.getActualTypeArguments()[0] instanceof Class<?>) {
+                                        baseClass.isAssignableFrom((Class<?>) genericReturnType.getActualTypeArguments()[0]);
+                                    } else if (genericReturnType.getActualTypeArguments()[0] instanceof WildcardType) {
+                                        WildcardType typeMarkerWildcard = (WildcardType) genericReturnType
+                                                .getActualTypeArguments()[0];
+                                        Type wildcardUpperBound = typeMarkerWildcard.getUpperBounds()[0];
+                                        if (!baseClass.isAssignableFrom(resolveClass(wildcardUpperBound))) {
+                                            throw new JSONDeserializerException("Determiner " + method.toGenericString() + " in "
+                                                    + baseClass.getCanonicalName()
+                                                    + " must return an upper bounded wildcard Class<? extends TYPE> or TypeMarker<? extends TYPE>, where TYPE is this interface or class or its subtypes. TYPE may also be parameterized.");
                                         }
+                                    } else {
+                                        throw new JSONDeserializerException("Determiner " + method.toGenericString() + " in "
+                                                + baseClass.getCanonicalName()
+                                                + " must return TypeMarker<? extends TYPE>, Class<? extends TYPE>, TypeMarker<TYPE>, or Class< TYPE> where TYPE is this interface or class or its subtypes.");
                                     }
                                     // all conditions are met at this point
                                     try {
-                                        TypeMarker<?> determinedType = (TypeMarker<?>) method.invoke(null, jsonEntry);
-                                        deserializedObject = deserialize(jsonEntry, determinedType);
+                                        Object[] arguments = prepareParameters(jsonEntry, method, typeVariableMap);
+                                        Object determinedType = method.invoke(arguments, jsonEntry);
+                                        if (determinedType instanceof Class<?>) {
+                                            deserializedObject = deserialize(jsonEntry, (Class<?>) determinedType, false);
+                                            // ^ only part of code that uses false here, we need to make sure there isn't infinite recursion
+                                        } else if (determinedType instanceof TypeMarker<?>) {
+                                            deserializedObject = deserialize(jsonEntry, (TypeMarker<?>) determinedType, false);
+                                        } else {
+                                            throw new JSONDeserializerException("Failed to retrieve return type of JSON determiner.");
+                                        }
+                                        break objectInstantiation;
                                     } catch (IllegalAccessException e) {
                                         // I'm still not quite sure if this is possible. Let me know if you know.
                                         throw new JSONDeserializerException("Could not invoke determiner "
-                                                + method.getName() + " in " + baseClass.getCanonicalName() + ".");
+                                                + method.toGenericString() + " in " + baseClass.getCanonicalName() + ".");
                                     } catch (InvocationTargetException e) {
                                         throw new JSONDeserializerException("Unable to determine type from determiner "
-                                                + method.getName() + " in " + baseClass.getCanonicalName() + ": "
+                                                + method.toGenericString() + " in " + baseClass.getCanonicalName() + ": "
                                                 + e.getCause().getMessage()); // print user-defined message
                                     }
-                                    break search;
                                 }
                             }
-                            // if reaches here, it must have failed
-                            throw new JSONDeserializerException("Cannot deserialize to interface or abstract class "
-                                    + baseClass.getCanonicalName()
-                                    + " because there is no determiner method present in it. For more info about determiners, see the annotation DeserializedJSONDeterminer documentation.");
                         }
-                    } else {
-                        Constructor<?>[] constructors = baseClass.getConstructors();
-                        search: {
-                            for (Constructor<?> constructor : constructors) {
-                                if (constructor.isAnnotationPresent(DeserializedJSONConstructor.class)) {
-                                    try {
-                                        deserializedObject = constructor.newInstance(
-                                                prepareParameters(jsonEntry, constructor, typeVariableMap));
-                                    } catch (IllegalAccessException e) {
-                                        throw new JSONDeserializerException("Could not invoke constructor "
-                                                + constructor.toString() + " in " + baseClass.getCanonicalName() + ".");
-                                    } catch (InvocationTargetException e) {
-                                        throw new JSONDeserializerException("Unable to create instance of "
-                                                + baseClass.getCanonicalName() + " with constructor "
-                                                + constructor.toString() + ": " + e.getCause().getMessage()); // print
-                                                                                                              // user-defined
-                                                                                                              // message
-                                    } catch (Exception e) {
-                                        // dead code
-                                        throw new JSONDeserializerException("message: " + e.getMessage());
-                                    }
-                                    break search;
+                        // try to create an object with constructor or factory method
+                        for (Constructor<?> constructor : baseClass.getConstructors()) {
+                            if (constructor.isAnnotationPresent(DeserializedJSONConstructor.class)) {
+                                if (constructor.getTypeParameters().length != 0) {
+                                    throw new JSONDeserializerException("Could not invoke constructor "
+                                            + constructor.toString() + " in " + baseClass.getCanonicalName()
+                                            + " since generic constructors are not supported.");
                                 }
-                            }
-                            throw new JSONDeserializerException(
-                                    "Unable to find a DeserializedJSONConstructor annotated constructor in class "
-                                            + baseClass.getCanonicalName());
-                        }
-                        for (Field field : fields) {
-                            JSONEntry entry = null;
-                            if (field.isAnnotationPresent(DeserializedJSONEntry.class)) {
-                                entry = jsonEntry;
-                            } else if (field.isAnnotationPresent(DeserializedJSONObjectValue.class)) {
-                                if (classJSONType != JSONType.OBJECT) {
-                                    throw new JSONDeserializerException("Cannot use \"DeserializedJSONObjectValue\" since " +
-                                            baseClass.getCanonicalName() + " serializes to JSON " +
-                                            classJSONType + ".");
-                                }
-                                JSONObject jsonObject = (JSONObject) jsonEntry;
-                                String key = field.getAnnotation(DeserializedJSONObjectValue.class).key();
-                                if (!jsonObject.containsKey(key)) {
-                                    throw new JSONDeserializerException("Field " + field.toString() + " in Class "
-                                            + baseClass.getCanonicalName() + " requests the value mapped to key \""
-                                            + key + "\", but that key is unavailible in the JSON object.");
-                                }
-                                entry = jsonObject.get(key);
-                            } else if (field.isAnnotationPresent(DeserializedJSONArrayItem.class)) {
-                                if (classJSONType != JSONType.ARRAY) {
-                                    throw new JSONDeserializerException("Cannot use \"DeserializedJSONArrayItem\" since " +
-                                            baseClass.getCanonicalName() + " serializes to JSON " +
-                                            classJSONType + ".");
-                                }
-                                JSONArray jsonArray = (JSONArray) jsonEntry;
-                                int index = field.getAnnotation(DeserializedJSONArrayItem.class).index();
-                                if (index < 0 || index >= jsonArray.length()) {
-                                    throw new JSONDeserializerException("Field " + field.toString() + " in Class "
-                                            + baseClass.getCanonicalName() + " requests the value at array index "
-                                            + index + ", but that index is out of bounds in the JSON array.");
-                                }
-                                entry = jsonArray.get(index);
-                            }
-                            if (entry != null) { // if one of the deserialized annotations was used
-                                Type resolvedType = resolveType(field.getGenericType(), typeVariableMap);
-                                Object newValue = deserialize(entry, resolvedType);
                                 try {
-                                    field.set(deserializedObject, newValue);
+                                    deserializedObject = constructor.newInstance(
+                                            prepareParameters(jsonEntry, constructor, typeVariableMap));
+                                    break objectInstantiation;
                                 } catch (IllegalAccessException e) {
-                                    throw new JSONDeserializerException("Unable to set field " + field.getName() +
-                                            " in " + baseClass.getCanonicalName() + ".");
+                                    throw new JSONDeserializerException("Could not invoke constructor "
+                                            + constructor.toString() + " in " + baseClass.getCanonicalName() + ".");
+                                } catch (InvocationTargetException e) {
+                                    throw new JSONDeserializerException("Unable to create instance of "
+                                            + baseClass.getCanonicalName() + " with constructor "
+                                            + constructor.toString() + " since an exception was thrown in the constructor: "
+                                            + e.getCause().getMessage());
+                                } catch (ExceptionInInitializerError e) {
+                                    throw new JSONDeserializerException("Unable to create instance of "
+                                            + baseClass.getCanonicalName() + " with constructor "
+                                            + constructor.toString() + " since an exception was thrown during initialization of the class: "
+                                            + e.getCause().getMessage());
+                                } catch (InstantiationException e) {
+                                    throw new JSONDeserializerException("Unable to create instance of "
+                                            + baseClass.getCanonicalName() + " with a constructor since it is abstract or an interface. Try using a factory method or determiner method.");
+                                } catch (IllegalArgumentException e) {
+                                    // should never happen
+                                    throw new JSONDeserializerException("Internal error: " + e.getMessage());
                                 }
                             }
                         }
                         for (Method method : methods) {
-                            if (isJSONAnnotationPresent(DeserializedJSONTarget.class, method)) {
-                                Object[] preparedParameters = prepareParameters(jsonEntry, method, typeVariableMap);
-                                try {
-                                    method.invoke(deserializedObject, preparedParameters);
-                                } catch (IllegalAccessException e) {
-                                    throw new JSONDeserializerException("Unable to invoke method " + method.getName() +
-                                            " in " + baseClass.getCanonicalName() + ".");
-                                } catch (InvocationTargetException e) {
-                                    throw new JSONDeserializerException("Internal exception in method " + method.getName() + " in " +
-                                            baseClass.getCanonicalName() + ": " + e.getCause().getMessage());
+                            if (method.isAnnotationPresent(DeserializedJSONConstructor.class)) {
+                                int determinerModifiers = method.getModifiers();
+                                if (!Modifier.isStatic(determinerModifiers)) {
+                                    throw new JSONDeserializerException("Factory method " + method.toGenericString() + " in "
+                                            + baseClass.getCanonicalName() + " must be static.");
                                 }
+                                if (method.getTypeParameters().length != classTypeParameters.length) {
+                                    throw new JSONDeserializerException("Factory method " + method.toGenericString()
+                                            + " must be a generic method with the same number of type parameters as its declaring class "
+                                            + baseClass.getCanonicalName());
+                                }
+                                if (method.getReturnType() != baseClass) {
+                                    throw new JSONDeserializerException(
+                                            "Factory method " + method.toGenericString() + " in " + baseClass.getCanonicalName()
+                                            + " must return " + baseClass.getCanonicalName());
+                                }
+                                if (classTypeParameters.length > 0) {
+                                    if (!(method.getGenericReturnType() instanceof ParameterizedType)) {
+                                        throw new JSONDeserializerException("Factory method " + method.toGenericString() + " in "
+                                                + baseClass.getCanonicalName()
+                                                + " must not return a raw type since raw types are not supported.");
+                                    }
+                                    ParameterizedType factoryParameterizedReturnType = (ParameterizedType) method.getGenericReturnType();
+                                    if (!Arrays.equals(factoryParameterizedReturnType.getActualTypeArguments(), method.getTypeParameters())) {
+                                        throw new JSONDeserializerException("Factory method " + method.toGenericString() + " in "
+                                                + baseClass.getCanonicalName()
+                                                + " must return "
+                                                + new ResolvedParameterizedType(null, baseClass, method.getTypeParameters()).toString()
+                                                + ".");
+                                    }
+                                } // all conditions met
+                                for (int i = 0; i < classTypeParameters.length; i++) {
+                                    typeVariableMap.put(method.getTypeParameters()[i], typeVariableMap.get(classTypeParameters[i]));
+                                }
+                                try {
+                                    deserializedObject = method.invoke(null, prepareParameters(jsonEntry, method, typeVariableMap));
+                                    break objectInstantiation;
+                                } catch (IllegalAccessException e) {
+                                    throw new JSONDeserializerException("Could not invoke factory method "
+                                            + method.toGenericString() + ".");
+                                } catch (InvocationTargetException e) {
+                                    throw new JSONDeserializerException("Unable to create instance of "
+                                            + baseClass.getCanonicalName() + " with factory method "
+                                            + method.toGenericString() + " since an exception was thrown in the method: "
+                                            + e.getCause().getMessage());
+                                } catch (ExceptionInInitializerError e) {
+                                    throw new JSONDeserializerException("Unable to create instance of "
+                                            + baseClass.getCanonicalName() + " with factory method "
+                                            + method.toGenericString() + " since an exception was thrown during initialization of the class: "
+                                            + e.getCause().getMessage());
+                                } catch (IllegalArgumentException | NullPointerException e) {
+                                    // should never happen
+                                    e.printStackTrace();
+                                    throw new JSONDeserializerException("Internal error: " + e.getMessage());
+                                    
+                                }
+                            }
+                        }
+                        throw new JSONDeserializerException(
+                                "Unable to construct an object of type " + baseClass.getCanonicalName()
+                                + " since there was no qualified constructor or factory method to instantiate it. Make sure exactly one constructor or factory method is marked with the DeserializedJSONConstructor annotation.");
+                    }
+                    for (Field field : fields) {
+                        JSONEntry entry = null;
+                        if (field.isAnnotationPresent(DeserializedJSONEntry.class)) {
+                            entry = jsonEntry;
+                        } else if (field.isAnnotationPresent(DeserializedJSONObjectValue.class)) {
+                            if (classJSONType != JSONType.OBJECT) {
+                                throw new JSONDeserializerException("Cannot use \"DeserializedJSONObjectValue\" since " +
+                                        baseClass.getCanonicalName() + " serializes to JSON " +
+                                        classJSONType + ".");
+                            }
+                            JSONObject jsonObject = (JSONObject) jsonEntry;
+                            String key = field.getAnnotation(DeserializedJSONObjectValue.class).key();
+                            if (!jsonObject.containsKey(key)) {
+                                throw new JSONDeserializerException("Field " + field.toString() + " in Class "
+                                        + baseClass.getCanonicalName() + " requests the value mapped to key \""
+                                        + key + "\", but that key is unavailible in the JSON object.");
+                            }
+                            entry = jsonObject.get(key);
+                        } else if (field.isAnnotationPresent(DeserializedJSONArrayItem.class)) {
+                            if (classJSONType != JSONType.ARRAY) {
+                                throw new JSONDeserializerException("Cannot use \"DeserializedJSONArrayItem\" since " +
+                                        baseClass.getCanonicalName() + " serializes to JSON " +
+                                        classJSONType + ".");
+                            }
+                            JSONArray jsonArray = (JSONArray) jsonEntry;
+                            int index = field.getAnnotation(DeserializedJSONArrayItem.class).index();
+                            if (index < 0 || index >= jsonArray.length()) {
+                                throw new JSONDeserializerException("Field " + field.toString() + " in Class "
+                                        + baseClass.getCanonicalName() + " requests the value at array index "
+                                        + index + ", but that index is out of bounds in the JSON array.");
+                            }
+                            entry = jsonArray.get(index);
+                        }
+                        if (entry != null) { // if one of the deserialized annotations was used
+                            Type resolvedType = resolveType(field.getGenericType(), typeVariableMap);
+                            Object newValue = deserialize(entry, resolvedType, true);
+                            try {
+                                field.set(deserializedObject, newValue);
+                            } catch (IllegalAccessException e) {
+                                throw new JSONDeserializerException("Unable to set field " + field.getName() +
+                                        " in " + baseClass.getCanonicalName() + ".");
+                            }
+                        }
+                    }
+                    for (Method method : methods) {
+                        if (isJSONAnnotationPresent(DeserializedJSONTarget.class, method)) {
+                            Object[] preparedParameters = prepareParameters(jsonEntry, method, typeVariableMap);
+                            try {
+                                method.invoke(deserializedObject, preparedParameters);
+                            } catch (IllegalAccessException e) {
+                                throw new JSONDeserializerException("Unable to invoke method " + method.toGenericString() +
+                                        " in " + baseClass.getCanonicalName() + ".");
+                            } catch (InvocationTargetException e) {
+                                throw new JSONDeserializerException("Internal exception in method " + method.toGenericString() + " in " +
+                                        baseClass.getCanonicalName() + ": " + e.getCause().getMessage());
                             }
                         }
                     }
@@ -344,7 +401,7 @@ public class JSONDeserializer {
                     Type listType = typeVariableMap.get(LIST_TYPE_VARIABLE);
                     List<Object> newList = new ArrayList<>();
                     for (JSONEntry arrayEntry : arrayEntries) {
-                        newList.add(deserialize(arrayEntry, listType));
+                        newList.add(deserialize(arrayEntry, listType, true));
                     }
                     deserializedObject = newList;
                 } else if (Set.class.isAssignableFrom(baseClass)) {
@@ -509,6 +566,37 @@ public class JSONDeserializer {
     /**
      * Deserializes a {@link JSONEntry} to a Java type specified by a given
      * {@link TypeMarker}. Returns an object of the same type as the
+     * {@code TypeMarker}. Allows determiner searching to be turned on or off.
+     * 
+     * @param <T>        the Java type that the JSON is being deserialized to; it
+     *                   must agree with the TypeMarker
+     * @param jsonEntry  the JSON data to convert to a Java object
+     * @param typeMarker the type of Java object to create
+     * @param searchForDeterminer whether to search for a determiner rather than create an object
+     * @return the newly created and populated Java object of type {@code <T>}
+     * @throws NullPointerException      if the JSON or type marker is {@code null}
+     * @throws IllegalArgumentException  if the {@code TypeMarker} is not fully
+     *                                   resolved (if it contains type variables)
+     * @throws JSONDeserializerException if there is an error while deserializing
+     */
+    private static <T> T deserialize(JSONEntry jsonEntry, TypeMarker<T> typeMarker, boolean searchForDeterminer)
+            throws NullPointerException, IllegalArgumentException, JSONDeserializerException {
+        if (typeMarker == null) {
+            throw new NullPointerException("Type marker is null.");
+        }
+        Type deserializedType = typeMarkerToType(typeMarker);
+        if (!isResolved(deserializedType)) {
+            throw new IllegalArgumentException(
+                    "The Type Marker provided is not completely resolved. Please remove all type variables from the declaration of the TypeMarker.");
+        }
+        @SuppressWarnings("unchecked")
+        T castObject = (T) deserialize(jsonEntry, deserializedType, searchForDeterminer);
+        return castObject;
+    }
+
+    /**
+     * Deserializes a {@link JSONEntry} to a Java type specified by a given
+     * {@link TypeMarker}. Returns an object of the same type as the
      * {@code TypeMarker}.
      * 
      * @param <T>        the Java type that the JSON is being deserialized to; it
@@ -523,16 +611,27 @@ public class JSONDeserializer {
      */
     public static <T> T deserialize(JSONEntry jsonEntry, TypeMarker<T> typeMarker)
             throws NullPointerException, IllegalArgumentException, JSONDeserializerException {
-        if (typeMarker == null) {
-            throw new NullPointerException("Type marker is null.");
-        }
-        Type deserializedType = typeMarkerToType(typeMarker);
-        if (!isResolved(deserializedType)) {
-            throw new IllegalArgumentException(
-                    "The Type Marker provided is not completely resolved. Please remove all type variables from the declaration of the TypeMarker.");
-        }
+        return deserialize(jsonEntry, typeMarker, true);
+    }
+
+    /**
+     * Deserializes a {@code JSONEntry} to a Java type specified by a given
+     * {@code Class}. Returns an object of the same type as the {@code Class}.
+     * Allows determiner searching to be turned on or off.
+     * 
+     * @param <T>       the Java type that the JSON is being deserialized to; it
+     *                  must agree with the {@code Class}
+     * @param jsonEntry the JSON data to convert to a Java object
+     * @param typeClass the type of Java object to create
+     * @param searchForDeterminer whether to search for a determiner rather than create an object
+     * @return the newly created and populated Java object of type {@code <T>}
+     * @throws NullPointerException      if the JSON or type class is {@code null}
+     * @throws JSONDeserializerException if there is an error while deserializing
+     */
+    private static <T> T deserialize(JSONEntry jsonEntry, Class<T> typeClass, boolean searchForDeterminer)
+            throws NullPointerException, JSONDeserializerException {
         @SuppressWarnings("unchecked")
-        T castObject = (T) deserialize(jsonEntry, deserializedType);
+        T castObject = (T) deserialize(jsonEntry, (Type) typeClass, searchForDeterminer); // cast avoids ambiguity
         return castObject;
     }
 
@@ -550,9 +649,7 @@ public class JSONDeserializer {
      */
     public static <T> T deserialize(JSONEntry jsonEntry, Class<T> typeClass)
             throws NullPointerException, JSONDeserializerException {
-        @SuppressWarnings("unchecked")
-        T castObject = (T) deserialize(jsonEntry, (Type) typeClass); // cast avoids ambiguity
-        return castObject;
+        return deserialize(jsonEntry, typeClass, true);
     }
 
     /**
@@ -684,7 +781,7 @@ public class JSONDeserializer {
                 throw new JSONDeserializerException("All parameters of a method annotated with \"DeserializedJSONTarget\" must be annotated with \"DeserializedJSONObjectValue\", \"DeserializedJSONArrayItem\", or \"DeserializedJSONEntry\".");
             }
             Type resolvedParameterType = resolveType(parameters[i].getParameterizedType(), typeVariableMap);
-            preparedParameters[i] = deserialize(entry, resolvedParameterType);
+            preparedParameters[i] = deserialize(entry, resolvedParameterType, true);
         }
         return preparedParameters;
     }
