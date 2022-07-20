@@ -14,28 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package com.jlbabilino.json;
 
 /**
- * This exception is thrown when a user attempts to retrieve a keyed entry from
- * a JSON object that does not contain an entry with that key. For example, this
- * would be thrown if a user tried to get a named entry called "age" for a
- * "person" when there was no entry in the object with that name.
- * <p>
- * This is an <i>unchecked exception</i> so ensure that code that implements
- * this API knows what keys should be availible in each JSON object.
- *
+ * This exception is thrown when the user attempts to convert a JSON entry
+ * of one type to a JSON entry of another type, and the conversion was not
+ * possible.
+ * 
  * @author Justin Babilino
  */
-public class JSONKeyNotFoundException extends RuntimeException {
-
+public class JSONConversionException extends RuntimeException {
+    
     /**
-     * Constructs a {@code JSONKeyNotFoundException} with a message to be
-     * communicated to the user.
-     *
-     * @param message the string message communicated to the user.
+     * Constructs a {@code JSONConversionException} with a string message.
+     * 
+     * @param message the message communicated to the user
      */
-    public JSONKeyNotFoundException(String message) {
+    public JSONConversionException(String message) {
         super(message);
     }
 }

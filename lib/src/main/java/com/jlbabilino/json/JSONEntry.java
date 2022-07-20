@@ -210,6 +210,46 @@ public abstract class JSONEntry {
     public abstract JSONType getType();
 
     /**
+     * Attempts to convert this JSON entry to a JSON object.
+     * 
+     * @return this JSON entry as a JSON object
+     * @throws JSONConversionException if this conversion is not supported
+     */
+    public abstract JSONObject asObject() throws JSONConversionException;
+
+    /**
+     * Attempts to convert this JSON entry to a JSON array.
+     * 
+     * @return this JSON entry as a JSON array
+     * @throws JSONConversionException if this conversion is not supported
+     */
+    public abstract JSONArray asArray() throws JSONConversionException;
+
+    /**
+     * Attempts to convert this JSON entry to a JSON boolean.
+     * 
+     * @return this JSON entry as a JSON boolean
+     * @throws JSONConversionException if this conversion is not supported
+     */
+    public abstract JSONBoolean asBoolean() throws JSONConversionException;
+
+    /**
+     * Attempts to convert this JSON entry to a JSON number.
+     * 
+     * @return this JSON entry as a JSON number
+     * @throws JSONConversionException if this conversion is not supported
+     */
+    public abstract JSONNumber asNumber() throws JSONConversionException;
+
+    /**
+     * Attempts to convert this JSON entry to a JSON string.
+     * 
+     * @return this JSON entry as a JSON string
+     * @throws JSONConversionException if this conversion is not supported
+     */
+    public abstract JSONString asString() throws JSONConversionException;
+
+    /**
      * Generates a {@code String} that represents this JSON entry as properly spaced
      * and indented JSON text that can be saved to a file.
      *

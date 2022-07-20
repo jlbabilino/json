@@ -37,7 +37,7 @@ public class JSONBoolean extends JSONEntry {
      *
      * @param value the <code>boolean</code> value to be stored in this entry
      */
-    public JSONBoolean(boolean value) {
+    JSONBoolean(boolean value) {
         this.value = value;
     }
 
@@ -71,6 +71,72 @@ public class JSONBoolean extends JSONEntry {
     }
 
     /**
+     * Attempts to convert this JSON boolean to a JSON object. Converting
+     * from JSON boolean to JSON object is not supported, so this method
+     * will always result in a {@code JSONConversionException}.
+     * 
+     * @return nothing since this conversion is not supported
+     * @throws JSONConversionException always since this conversion is not supported
+     */
+    @Override
+    public JSONObject asObject() throws JSONConversionException {
+        throw new JSONConversionException("Cannot convert JSON boolean to JSON object");
+    }
+
+    /**
+     * Attempts to convert this JSON boolean to a JSON array. Converting
+     * from JSON boolean to JSON array is not supported, so this method
+     * will always result in a {@code JSONConversionException}.
+     * 
+     * @return nothing since this conversion is not supported
+     * @throws JSONConversionException always since this conversion is not supported
+     */
+    @Override
+    public JSONArray asArray() throws JSONConversionException {
+        throw new JSONConversionException("Cannot convert JSON boolean to JSON array");
+    }
+
+    /**
+     * Attempts to convert this JSON boolean to a JSON boolean. Since this
+     * is a JSON boolean, this JSON boolean is returned.
+     * 
+     * @return this JSON boolean
+     * @throws JSONConversionException never since this conversion is supported
+     */
+    @Override
+    public JSONBoolean asBoolean() throws JSONConversionException {
+        return this;
+    }
+
+    /**
+     * Attempts to convert this JSON boolean to a JSON number. A JSON boolean
+     * value of {@code false} converts to a JSON number of value {@code 0},
+     * and a JSON boolean of value {@code true} converts to a JSON number of
+     * ov value {@code 1}.
+     * 
+     * @return the numerical representation of this JSON boolean
+     * @throws JSONConversionException never since this conversion is supported
+     */
+    @Override
+    public JSONNumber asNumber() throws JSONConversionException {
+        return getBoolean() ? new JSONNumber(1) : new JSONNumber(0);
+    }
+
+    /**
+     * Attempts to convert this JSON boolean to a JSON string. Conversion to
+     * string is achieved using {@code java.lang.Boolean.toString(boolean)}
+     * by passing in {@code getBoolean()} and wrapping the value in a
+     * {@code JSONString}.
+     * 
+     * @return the string representation of this JSON boolean
+     * @throws JSONConversionException never since this conversion is supported
+     */
+    @Override
+    public JSONString asString() throws JSONConversionException {
+        return new JSONString(Boolean.toString(getBoolean()));
+    }
+
+    /**
      * Generates a {@code String} that represents this JSON boolean. If this entry contains a {@code true} value,
      * then returns "true", otherwise returns "false". It is equivalent to
      * <pre>
@@ -85,4 +151,13 @@ public class JSONBoolean extends JSONEntry {
     public String toJSONText(int indentLevel, int jsonFormat) {
         return Boolean.toString(value);
     }
+
+    /**
+     * the false JSON boolean value
+     */
+    public static final JSONBoolean FALSE = new JSONBoolean(false);
+    /**
+     * the true JSON boolean value
+     */
+    public static final JSONBoolean TRUE = new JSONBoolean(true);
 }

@@ -1,5 +1,7 @@
 package com.jlbabilino.json;
 
+import java.lang.reflect.Field;
+
 import com.jlbabilino.json.JSONEntry.JSONType;
 
 public class Test {
@@ -74,3 +76,21 @@ class HeadWaypoint extends Waypoint {
         this.head = head;
     }
 }
+
+class Super {
+    public static void main(String[] args) throws Exception {
+        Sub sub = new Sub();
+        Field superField = Super.class.getDeclaredField("x");
+        Field subField = Sub.class.getDeclaredField("x");
+        superField.set(sub, 5);
+        subField.set(sub, 3);
+        System.out.println(superField.get(sub));
+        System.out.println(subField.get(sub));
+    }
+    public int x;
+}
+
+class Sub extends Super {
+    public int x;
+}
+

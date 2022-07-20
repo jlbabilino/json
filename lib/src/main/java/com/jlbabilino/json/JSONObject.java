@@ -45,7 +45,7 @@ public class JSONObject extends JSONEntry {
      *
      * @param map key-value pairs of <code>String</code> and <code>JSONEntry</code>
      */
-    public JSONObject(Map<String, JSONEntry> map) {
+    JSONObject(Map<String, JSONEntry> map) {
         this.map = map;
     }
 
@@ -126,6 +126,77 @@ public class JSONObject extends JSONEntry {
     @Override
     public JSONType getType() {
         return JSONType.OBJECT;
+    }
+
+    /**
+     * Attempts to convert this JSON object to a JSON object. Since this
+     * is a JSON object, this JSON object is returned.
+     * 
+     * @return this JSON object
+     * @throws JSONConversionException never since this conversion is supported
+     */
+    @Override
+    public JSONObject asObject() throws JSONConversionException {
+        return this;
+    }
+
+    /**
+     * Attempts to convert this JSON object to a JSON array. Conversion from
+     * JSON object to JSON array is defined by extracting each key-value pair in
+     * the JSON object as a new JSON object and placing each of these in an array
+     * in no particular order.
+     * 
+     * @return this JSON object as a JSON array
+     * @throws JSONConversionException never since this conversion is supported
+     */
+    @Override
+    public JSONArray asArray() throws JSONConversionException {
+        JSONEntry[] jsonEntries = new JSONEntry[size()];
+        int i = 0;
+        for (Map.Entry<String, JSONEntry> entry : map.entrySet()) {
+            jsonEntries[i] = new JSONObject(Map.of(entry.getKey(), entry.getValue()));
+            i++;
+        }
+        return new JSONArray(jsonEntries);
+    }
+
+    /**
+     * Attempts to convert this JSON object to a JSON boolean. Converting
+     * from JSON object to JSON boolean is not supported, so this method
+     * will always result in a {@code JSONConversionException}.
+     * 
+     * @return nothing since this conversion is not supported
+     * @throws JSONConversionException always since this conversion is not supported
+     */
+    @Override
+    public JSONBoolean asBoolean() throws JSONConversionException {
+        throw new JSONConversionException("Cannot convert JSON object to JSON boolean");
+    }
+
+    /**
+     * Attempts to convert this JSON object to a JSON number. Converting
+     * from JSON object to JSON number is not supported, so this method
+     * will always result in a {@code JSONConversionException}.
+     * 
+     * @return nothing since this conversion is not supported
+     * @throws JSONConversionException always since this conversion is not supported
+     */
+    @Override
+    public JSONNumber asNumber() throws JSONConversionException {
+        throw new JSONConversionException("Cannot convert JSON object to JSON number");
+    }
+
+    /**
+     * Attempts to convert this JSON object to a JSON string. Converting
+     * from JSON object to JSON string is not supported, so this method
+     * will always result in a {@code JSONConversionException}.
+     * 
+     * @return nothing since this conversion is not supported
+     * @throws JSONConversionException always since this conversion is not supported
+     */
+    @Override
+    public JSONString asString() throws JSONConversionException {
+        throw new JSONConversionException("Cannot convert JSON object to JSON string");
     }
 
     /**

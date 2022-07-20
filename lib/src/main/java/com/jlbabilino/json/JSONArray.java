@@ -43,7 +43,7 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
      *
      * @param array array of <code>JSONEntries</code>
      */
-    public JSONArray(JSONEntry[] array) {
+    JSONArray(JSONEntry[] array) {
         this.array = array;
     }
 
@@ -159,6 +159,70 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
     }
 
     /**
+     * Attempts to convert this JSON array to a JSON object. Converting
+     * from JSON array to JSON object is not supported, so this method
+     * will always result in a {@code JSONConversionException}.
+     * 
+     * @return nothing since this conversion is not supported
+     * @throws JSONConversionException always since this conversion is not supported
+     */
+    @Override
+    public JSONObject asObject() throws JSONConversionException {
+        throw new JSONConversionException("Cannot convert JSON array to JSON object");
+    }
+
+    /**
+     * Attempts to convert this JSON array to a JSON array. Since this
+     * is a JSON array, this JSON array is returned.
+     * 
+     * @return this JSON array
+     * @throws JSONConversionException never since this conversion is supported
+     */
+    @Override
+    public JSONArray asArray() throws JSONConversionException {
+        return this;
+    }
+
+    /**
+     * Attempts to convert this JSON array to a JSON boolean. Converting
+     * from JSON array to JSON boolean is not supported, so this method
+     * will always result in a {@code JSONConversionException}.
+     * 
+     * @return nothing since this conversion is not supported
+     * @throws JSONConversionException always since this conversion is not supported
+     */
+    @Override
+    public JSONBoolean asBoolean() throws JSONConversionException {
+        throw new JSONConversionException("Cannot convert JSON array to JSON boolean");
+    }
+
+    /**
+     * Attempts to convert this JSON array to a JSON number. Converting
+     * from JSON array to JSON number is not supported, so this method
+     * will always result in a {@code JSONConversionException}.
+     * 
+     * @return nothing since this conversion is not supported
+     * @throws JSONConversionException always since this conversion is not supported
+     */
+    @Override
+    public JSONNumber asNumber() throws JSONConversionException {
+        throw new JSONConversionException("Cannot convert JSON array to JSON number");
+    }
+
+    /**
+     * Attempts to convert this JSON array to a JSON string. Converting
+     * from JSON array to JSON string is not supported, so this method
+     * will always result in a {@code JSONConversionException}.
+     * 
+     * @return nothing since this conversion is not supported
+     * @throws JSONConversionException always since this conversion is not supported
+     */
+    @Override
+    public JSONString asString() throws JSONConversionException {
+        throw new JSONConversionException("Cannot convert JSON array to JSON string");
+    }
+
+    /**
      * Generates a {@code String} that represents this JSON array. Creates square
      * brackets around the array, and places all values in order, separated by
      * commas. For example, some JSON array could be represented as
@@ -233,5 +297,43 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
         str.append("]"); // add final newline and close bracket ]
 
         return str.toString();
+    }
+
+    /**
+     * Constructs a {@code JSONArray} from an array of entries.
+     * 
+     * @param entries the array of JSON entries
+     * @return the JSON array
+     * @throws NullPointerException if the input array or an item in the input array is null
+     */
+    public static JSONArray of(JSONEntry... entries) throws NullPointerException {
+        if (entries == null) {
+            throw new NullPointerException("Cannot instantiate a JSONArray with a null reference.");
+        }
+        for (JSONEntry entry : entries) {
+            if (entry == null) {
+                throw new NullPointerException("Cannot instantiate a JSONArray with any null entries in the entries array.");
+            }
+        }
+        return new JSONArray(entries);
+    }
+
+    /**
+     * Constructs a {@code JSONArray} from an array of objects by
+     * serializing each one.
+     * 
+     * @param entries the array of objects
+     * @return the JSON array
+     * @throws NullPointerException if the input array is null
+     */
+    public static JSONArray of(Object... entries) throws NullPointerException {
+        if (entries == null) {
+            throw new NullPointerException("Cannot instantiate a JSONArray with a null reference.");
+        }
+        JSONEntry[] jsonEntries = new JSONEntry[entries.length];
+        for (int i = 0; i < entries.length; i++) {
+            jsonEntries[i] = JSONSerializer.serializeJSONEntry(entries[i]);
+        }
+        return new JSONArray(jsonEntries);
     }
 }
