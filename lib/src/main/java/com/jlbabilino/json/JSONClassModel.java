@@ -82,8 +82,12 @@ final class JSONClassModel {
                 }
             }
         }
+        if (classModel.constructor == null) {
+            throw new JSONDeserializerException(
+                    "Unable to locate a suitable constructor or factory method to instantiate type"
+                    + System.lineSeparator() + System.lineSeparator() + cls.getCanonicalName());
+        }
         collectClassModel(cls, classModel);
-        
         return classModel;
     }
 
