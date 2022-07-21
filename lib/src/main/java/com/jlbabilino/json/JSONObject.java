@@ -21,14 +21,8 @@ import java.util.Map;
 
 /**
  * This class represents a JSON object type. It contains key-value pairs where
- * the key is a {@code String}, and the value is a {@code JSONEntry}. It
- * implements a <code>Map</code> to achieve this. If a program creates JSON data
- * manually (rather than from serialization), then the map used to construct the
- * {@code JSONObject} will not be exposed to other classes directly in any way,
- * and it will not modify the map, but it will access methods in it. This means
- * that modifications to the map WILL AFFECT this object. Please try to keep the
- * map used for construction hidden from other classes after it is instantiated
- * with the appropriate data.
+ * the key is a {@code JSONString}, and the value is a {@code JSONEntry}. It
+ * uses a Java {@code Map} to achieve this.
  * 
  * @author Justin Babilino
  */
@@ -37,15 +31,15 @@ public class JSONObject extends JSONEntry {
     /**
      * The {@code Map} that stores key-value pairs for JSON objects
      */
-    private final Map<String, JSONEntry> map;
+    private final Map<JSONString, JSONEntry> map;
 
     /**
      * Constructs a {@code JSONObject} with a {@code Map} containing
-     * {@link JSONEntry} objects paired with string keys.
+     * {@link JSONEntry} objects paired with {@code JSONString} keys.
      *
-     * @param map key-value pairs of <code>String</code> and <code>JSONEntry</code>
+     * @param map key-value pairs of {@code JSONString} and {@code JSONEntry}
      */
-    JSONObject(Map<String, JSONEntry> map) {
+    JSONObject(Map<JSONString, JSONEntry> map) {
         this.map = map;
     }
 
@@ -56,8 +50,25 @@ public class JSONObject extends JSONEntry {
      * 
      * @return the map of this JSON object
      */
-    Map<String, JSONEntry> getMap() {
+    Map<JSONString, JSONEntry> getMap() {
         return map;
+    }
+
+    /**
+     * Retrieves the mapped {@link JSONEntry} from the given {@code JSONString} key, if
+     * it is availible. A key is availible if and only if {@code containsKey()}
+     * returns {@code true}.
+     *
+     * @param key the {@code JSONString} key used to retrieve the value
+     * @return the {@code JSONEntry} associated with the key provided
+     * @throws JSONKeyNotFoundException if the key does not exist in the object
+     */
+    public JSONEntry get(JSONString key) throws JSONKeyNotFoundException {
+        if (containsKey(key)) {
+            return map.get(key);
+        } else {
+            throw new JSONKeyNotFoundException("Key \"" + key + "\" not found in this JSON object.");
+        }
     }
 
     /**
@@ -70,21 +81,27 @@ public class JSONObject extends JSONEntry {
      * @throws JSONKeyNotFoundException if the key does not exist in the object
      */
     public JSONEntry get(String key) throws JSONKeyNotFoundException {
-        if (containsKey(key)) {
-            return map.get(key);
-        } else {
-            throw new JSONKeyNotFoundException("Key \"" + key + "\" not found in this JSON object.");
-        }
+        return get(new JSONString(key));
     }
 
     /**
-     * Checks if a string key contains a mapping in this JSON object.
+     * Checks if there is a mapping for this JSON string in this JSON object.
      * 
      * @param key the key to check for
-     * @return <code>true</code> if and only if the key exists in this object
+     * @return {@code true} if and only if the key exists in this JSON object
+     */
+    public boolean containsKey(JSONString key) {
+        return map.containsKey(key);
+    }
+
+    /**
+     * Checks if there is a mapping for this string in this JSON object.
+     * 
+     * @param key the key to check for
+     * @return {@code true} if and only if the key exists in this JSON object
      */
     public boolean containsKey(String key) {
-        return map.containsKey(key);
+        return containsKey(new JSONString(key));
     }
 
     /**
@@ -153,7 +170,7 @@ public class JSONObject extends JSONEntry {
     public JSONArray asArray() throws JSONConversionException {
         JSONEntry[] jsonEntries = new JSONEntry[size()];
         int i = 0;
-        for (Map.Entry<String, JSONEntry> entry : map.entrySet()) {
+        for (Map.Entry<JSONString, JSONEntry> entry : map.entrySet()) {
             jsonEntries[i] = new JSONObject(Map.of(entry.getKey(), entry.getValue()));
             i++;
         }
@@ -258,16 +275,16 @@ public class JSONObject extends JSONEntry {
             strBetweenItems = " ";
         }
 
-        Iterator<Map.Entry<String, JSONEntry>> setIterator = map.entrySet().iterator();
+        Iterator<Map.Entry<JSONString, JSONEntry>> setIterator = map.entrySet().iterator();
 
-        Map.Entry<String, JSONEntry> firstEntry = setIterator.next();
+        Map.Entry<JSONString, JSONEntry> firstEntry = setIterator.next();
         str.append("\"").append(firstEntry.getKey()).append("\": ") // add the first key
                 .append(firstEntry.getValue().toJSONText(indentLevel + 1, jsonFormat)); // add the first value
 
         setIterator.forEachRemaining(entry -> { // I use a lambda to avoid having to assign the next item over and over
                                                 // again
             str.append(",").append(strBetweenItems) // add comma and newline
-                    .append("\"").append(entry.getKey()).append("\": ") // add the key and colon :
+                    .append("\"").append(entry.getKey().getString()).append("\": ") // add the key and colon :
                     .append(entry.getValue().toJSONText(indentLevel + 1, jsonFormat)); // add the value
         });
 
@@ -278,5 +295,9 @@ public class JSONObject extends JSONEntry {
         str.append("}"); // add final newline and close brace }
 
         return str.toString();
+    }
+
+    public static JSONObject of(Map<JSONString, JSONEntry> jsonObjectMap) {
+        return new JSONObject(jsonObjectMap);
     }
 }

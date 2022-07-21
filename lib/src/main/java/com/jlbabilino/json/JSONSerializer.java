@@ -163,7 +163,7 @@ public final class JSONSerializer {
                     switch (jsonType) {
                     case OBJECT:
                         objectMode: {
-                            Map<String, JSONEntry> objectMap = new HashMap<>();
+                            Map<JSONString, JSONEntry> objectMap = new HashMap<>();
                             for (Field field : fields) {
                                 if (field.isAnnotationPresent(SerializedJSONEntry.class)) {
                                     try {
@@ -176,7 +176,7 @@ public final class JSONSerializer {
                                     }
                                 }
                                 if (field.isAnnotationPresent(SerializedJSONObjectValue.class)) {
-                                    String key = field.getAnnotation(SerializedJSONObjectValue.class).key();
+                                    JSONString key = new JSONString(field.getAnnotation(SerializedJSONObjectValue.class).key());
                                     try {
                                         JSONEntry entryTest = serializeJSONEntry(field.get(obj));
                                         objectMap.put(key, entryTest);
@@ -197,7 +197,7 @@ public final class JSONSerializer {
                                         }
                                     }
                                     if (isJSONAnnotationPresent(SerializedJSONObjectValue.class, method)) {
-                                        String key = getJSONAnnotation(SerializedJSONObjectValue.class, method).key();
+                                        JSONString key = new JSONString(getJSONAnnotation(SerializedJSONObjectValue.class, method).key());
                                         try {
                                             JSONEntry entryTest = serializeJSONEntry(method.invoke(obj));
                                             objectMap.put(key, entryTest);
@@ -322,12 +322,12 @@ public final class JSONSerializer {
             } else if (obj instanceof Map<?, ?>) {
                 @SuppressWarnings("unchecked")
                 Map<Object, Object> objMap = (Map<Object, Object>) obj;
-                Map<String, JSONEntry> objectMap = new HashMap<>();
+                Map<JSONString, JSONEntry> objectMap = new HashMap<>();
                 for (Map.Entry<Object, Object> objMapEntry : objMap.entrySet()) {
                     Object objMapKey = objMapEntry.getKey();
                     Object objMapValue = objMapEntry.getValue();
                     if (objMapKey != null && objMapValue != null) {
-                        String key = objMapEntry.toString();
+                        JSONString key = new JSONString(objMapEntry.toString());
                         JSONEntry value = serializeJSONEntry(objMapValue);
                         objectMap.put(key, value);
                     }
@@ -352,7 +352,7 @@ public final class JSONSerializer {
                 entry = new JSONString(escapeString((String) obj));
             } else { // automatic serialization
                 Method[] methods = cls.getMethods();
-                Map<String, JSONEntry> objectMap = new HashMap<>();
+                Map<JSONString, JSONEntry> objectMap = new HashMap<>();
                 search: {
                     for (Method method : methods) {
                         String methodName = method.getName();
@@ -364,7 +364,7 @@ public final class JSONSerializer {
                                     entry = serializeJSONEntry(methodReturnValue);
                                     break search;
                                 } else {
-                                    String propertyName = methodName.substring(3);
+                                    JSONString propertyName = new JSONString(methodName.substring(3));
                                     objectMap.put(propertyName, serializeJSONEntry(methodReturnValue));
                                 }
                             } catch (IllegalAccessException | InvocationTargetException e) {

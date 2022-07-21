@@ -16,7 +16,6 @@
  */
 package com.jlbabilino.json;
 
-import static com.jlbabilino.json.JSONAnnotations.isJSONAnnotationPresent;
 import static com.jlbabilino.json.ResolvedTypes.isResolved;
 import static com.jlbabilino.json.ResolvedTypes.resolveClass;
 import static com.jlbabilino.json.ResolvedTypes.resolveType;
@@ -30,15 +29,13 @@ import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,13 +56,34 @@ import com.jlbabilino.json.JSONEntry.JSONType;
  * @see JSONSerializer
  * @author Justin Babilino
  */
-public class JSONDeserializer {
+public final class JSONDeserializer {
 
     /**
-     * This holds the type parameter {@code E} in the {@link List} class for use in
+     * Prevent instantiation
+     */
+    private JSONDeserializer() {
+    }
+
+    /**
+     * This holds the type parameter {@code E} in the {@link List} interface for use in
      * the deserializer.
      */
-    private static final TypeVariable<?> LIST_TYPE_VARIABLE = List.class.getTypeParameters()[0];
+    private static final TypeVariable<?> LIST_ELEMENT_TYPE_VARIABLE = List.class.getTypeParameters()[0];
+    /**
+     * This holds the type parameter {@code E} in the {@link Set} interface for use in
+     * the deserializer.
+     */
+    private static final TypeVariable<?> SET_ELEMENT_TYPE_VARIABLE = Set.class.getTypeParameters()[0];
+    /**
+     * This holds the type parameter {@code K} in the {@link Map} interface for use in
+     * the deserializer.
+     */
+    private static final TypeVariable<?> MAP_KEY_TYPE_VARIABLE = Map.class.getTypeParameters()[0];
+    /**
+     * This holds the type parameter {@code V} in the {@link Map} interface for use in
+     * the deserializer.
+     */
+    private static final TypeVariable<?> MAP_VALUE_TYPE_VARIABLE = Map.class.getTypeParameters()[1];
 
     /**
      * Deserializes a {@link JSON} to a Java type specified by a given
@@ -166,7 +184,6 @@ public class JSONDeserializer {
                                             + baseClass.getCanonicalName() + ".");
                         }
                         JSONClassModel classModel = JSONClassModel.of(baseClass);
-                        int baseClassModifiers = baseClass.getModifiers();
                         objectInstantiation: {
                             if (searchForDeterminer && classModel.getDeterminer() != null) {
                                 Method determiner = classModel.getDeterminer();
@@ -305,20 +322,47 @@ public class JSONDeserializer {
                     if (!jsonEntry.isArray()) {
                         throw new JSONDeserializerException("This library does not support converting any JSON type except JSON arrays to Java Lists.");
                     }
-                    JSONEntry[] arrayEntries = ((JSONArray) jsonEntry).getArray();
+                    JSONEntry[] arrayEntries = jsonEntry.asArray().getArray();
                     if (typeVariableMap.size() != 1) {
                         throw new JSONDeserializerException("This library does not support raw types for Java Collections.");
                     }
-                    Type listType = typeVariableMap.get(LIST_TYPE_VARIABLE);
-                    List<Object> newList = new ArrayList<>();
+                    Type listType = typeVariableMap.get(LIST_ELEMENT_TYPE_VARIABLE);
+                    List<Object> newList = new ArrayList<>(arrayEntries.length);
                     for (JSONEntry arrayEntry : arrayEntries) {
                         newList.add(deserialize(arrayEntry, listType, true));
                     }
                     deserializedObject = newList;
-                } else if (Set.class.isAssignableFrom(baseClass)) {
-                    deserializedObject = null;
-                } else if (Map.class.isAssignableFrom(baseClass)) {
-                    deserializedObject = null;
+                } else if (baseClass == Set.class) {
+                    if (!jsonEntry.isArray()) {
+                        throw new JSONDeserializerException("This library does not support converting any JSON type except JSON arrays to Java Sets.");
+                    }
+                    JSONEntry[] arrayEntries = jsonEntry.asArray().getArray();
+                    if (typeVariableMap.size() != 1) {
+                        throw new JSONDeserializerException("This library does not support raw types for Java Collections.");
+                    }
+                    Type setType = typeVariableMap.get(SET_ELEMENT_TYPE_VARIABLE);
+                    Set<Object> newSet = new HashSet<>(arrayEntries.length);
+                    for (JSONEntry arrayEntry : arrayEntries) {
+                        newSet.add(deserialize(arrayEntry, setType, true));
+                    }
+                    deserializedObject = newSet;
+                } else if (baseClass == Map.class) {
+                    if (!jsonEntry.isObject()) {
+                        throw new JSONDeserializerException("This library does not support converting any JSON type except JSON objects to Java Maps.");
+                    }
+                    Map<JSONString, JSONEntry> objectMap = jsonEntry.asObject().getMap();
+                    if (typeVariableMap.size() != 2) {
+                        throw new JSONDeserializerException("This library does not support raw types for Java Collections.");
+                    }
+                    Type mapKeyType = typeVariableMap.get(MAP_KEY_TYPE_VARIABLE);
+                    Type mapValueType = typeVariableMap.get(MAP_VALUE_TYPE_VARIABLE);
+                    Map<Object, Object> newMap = new HashMap<>();
+                    for (Map.Entry<JSONString, JSONEntry> mapEntry : objectMap.entrySet()) {
+                        newMap.put(
+                                deserialize(mapEntry.getKey(), mapKeyType, true),
+                                deserialize(mapEntry.getValue(), mapValueType, true));
+                    }
+                    deserializedObject = newMap;
                 } else if (baseClass.isArray()) {
                     if (!jsonEntry.isArray()) {
                         throw new JSONDeserializerException("This library does not support converting other JSON types besides arrays to Java arrays.");

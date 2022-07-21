@@ -291,11 +291,11 @@ public class JSONParser {
         index = startIndex; // return back to original start index if not blank
         lineNumber = startLineNum;
 
-        Map<String, JSONEntry> entries = new HashMap<>();
+        Map<JSONString, JSONEntry> entries = new HashMap<>();
         do {
             index++; // skip past either beginning of object { or previous comma ,
             skipWhitespace(); // skip to key
-            String key = readString();
+            JSONString key = stringEntry();
             skipWhitespace(); // skip to colon :
             if (charAtIndex() != ':') {
                 throw new JSONParserException(index, lineNumber, "Expecting ':', got '" + charAtIndex() + "'");

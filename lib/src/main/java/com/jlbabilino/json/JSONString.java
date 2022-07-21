@@ -140,12 +140,35 @@ public class JSONString extends JSONEntry {
      * "\"" + getString() + "\""
      * </pre>
      * 
-     * @param indentLevel this parameter has no effect on the result or effect of this implementation of this method
-     * @param jsonFormat this parameter has no effect on the result or effect of this implementation of this method
+     * @param indentLevel this parameter has no effect
+     * @param jsonFormat this parameter has no effect
      * @return the string representation of this JSON text string
      */
     @Override
     public String toJSONText(int indentLevel, int jsonFormat) {
         return "\"" + string + "\"";
+    }
+
+    @Override
+    public int hashCode() {
+        return string.hashCode();
+    }
+
+    /**
+     * Checks if this JSON string is equal to another object. A JSON string
+     * is equal to an object if it is of type {@code JSONString} and its
+     * string is equivalent to the string of this object. {@code getString()}
+     * must equal {@code ((JSONString) obj).getString()}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj instanceof JSONString) {
+            return getString().equals(((JSONString) obj).getString());
+        } else {
+            return false;
+        }
     }
 }
