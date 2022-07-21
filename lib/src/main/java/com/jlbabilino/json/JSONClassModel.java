@@ -66,15 +66,20 @@ final class JSONClassModel {
                     break;
                 }
                 if (method.isAnnotationPresent(DeserializedJSONConstructor.class)) {
+                    checkFactoryMethodConditions(method);
                     classModel.constructor = method;
+                    break;
                 }
             }
         }
-        Constructor<?>[] constructors = cls.getDeclaredConstructors();
-        for (Constructor<?> declaredConstructor : constructors) {
-            if (declaredConstructor.isAnnotationPresent(DeserializedJSONConstructor.class)) {
-                classModel.constructor = declaredConstructor;
-                break;
+        if (!Modifier.isAbstract(cls.getModifiers()) && !cls.isInterface()) {
+            Constructor<?>[] constructors = cls.getDeclaredConstructors();
+            for (Constructor<?> declaredConstructor : constructors) {
+                if (declaredConstructor.isAnnotationPresent(DeserializedJSONConstructor.class)) {
+                    checkZeroTypeParameters(declaredConstructor);
+                    classModel.constructor = declaredConstructor;
+                    break;
+                }
             }
         }
         collectClassModel(cls, classModel);
@@ -113,14 +118,6 @@ final class JSONClassModel {
                 if (addMethodToModel(clsMethod, classModel.serializedJSONArrayItemMethods, SerializedJSONArrayItem.class)) break;
                 if (addMethodToModel(clsMethod, classModel.deserializedJSONTargetMethods, DeserializedJSONTarget.class)) break;
             }
-            if (!Modifier.isAbstract(cls.getModifiers()) && !cls.isInterface()) {
-                Constructor<?>[] constructors = cls.getDeclaredConstructors();
-                for (Constructor<?> constructor : constructors) {
-                    if (constructor.isAnnotationPresent(DeserializedJSONConstructor.class)) {
-
-                    }
-                }
-            }
         }
     }
 
@@ -150,6 +147,7 @@ final class JSONClassModel {
     }
 
     static class AnnotatedJSONMethod<A extends Annotation> {
+
         private A annotation;
         private Method method;
 
@@ -176,42 +174,53 @@ final class JSONClassModel {
         Class<?> cls = determiner.getDeclaringClass();
         int determinerModifiers = determiner.getModifiers();
         if (!Modifier.isStatic(determinerModifiers)) {
-            throw new JSONDeserializerException("Determiner \"" + determiner.toGenericString()
-                    + "\" must be a static method.");
+            throw new JSONDeserializerException("Determiner " + System.lineSeparator() + System.lineSeparator()
+                    + determiner.toGenericString() + System.lineSeparator() + System.lineSeparator()
+                    + " must be a static method.");
         }
         if (determiner.getExceptionTypes().length > 1
                 || (determiner.getExceptionTypes().length == 1
                 && determiner.getExceptionTypes()[0] != JSONDeserializerException.class)) {
-            throw new JSONDeserializerException("Determiner \"" + determiner.toGenericString()
-                    + "\" can throw up to one exception, and it can only throw exceptions of type \"JSONDeserializerException\"");
+            throw new JSONDeserializerException("Determiner " + System.lineSeparator() + System.lineSeparator()
+                    + determiner.toGenericString() + System.lineSeparator() + System.lineSeparator()
+                    + " can throw up to one exception, and it can only throw exceptions of type \"JSONDeserializerException\"");
+        }
+        if (determiner.getTypeParameters().length > 0) {
+            throw new JSONDeserializerException("Determiner" + System.lineSeparator() + System.lineSeparator()
+                    + determiner.toGenericString() + System.lineSeparator() + System.lineSeparator()
+                    + "should not be a generic method.");
         }
         if (!(determiner.getReturnType() == TypeMarker.class || determiner.getReturnType() == Class.class) ||
             !(determiner.getGenericReturnType() instanceof ParameterizedType)) {
-            throw new JSONDeserializerException(
-                    "Determiner " + determiner.toGenericString() + " in " + cls.getCanonicalName()
-                            + " must return a parameterized Class<> or TypeMarker<>");
-        }
-        if (determiner.getTypeParameters().length != 0) {
-            throw new JSONDeserializerException("Determiner " + determiner.toGenericString() + " in "
-                    + cls.getCanonicalName() + " should not be a generic method.");
+            ResolvedParameterizedType recommendedType = new ResolvedParameterizedType(cls.getDeclaringClass(), Class.class, new Type[]{new ResolvedWildcardType(new Type[0], new Type[0])});
+            throw new JSONDeserializerException("Determiner" + System.lineSeparator() + System.lineSeparator()
+                    + determiner.toGenericString() + System.lineSeparator() + System.lineSeparator()
+                    + "must return a parameterized Class<> or TypeMarker<>. For example, it could return"
+                    + System.lineSeparator() + System.lineSeparator()
+                    + recommendedType.toString() + System.lineSeparator() + System.lineSeparator()
+                    + "or a parameterized version if this is a generic type.");
         }
         ParameterizedType genericReturnType = (ParameterizedType) determiner
                 .getGenericReturnType();
         if (genericReturnType.getActualTypeArguments()[0] instanceof Class<?>) {
-            cls.isAssignableFrom((Class<?>) genericReturnType.getActualTypeArguments()[0]);
+            if (!cls.isAssignableFrom((Class<?>) genericReturnType.getActualTypeArguments()[0])) {
+                throw new JSONDeserializerException("Determiner" + System.lineSeparator() + System.lineSeparator()
+                        + determiner.toGenericString() + System.lineSeparator() + System.lineSeparator()
+                        + "must return Class<TYPE> or TypeMarker<TYPE> where TYPE is this type or a subtype.");
+            }
         } else if (genericReturnType.getActualTypeArguments()[0] instanceof WildcardType) {
             WildcardType typeMarkerWildcard = (WildcardType) genericReturnType
                     .getActualTypeArguments()[0];
             Type wildcardUpperBound = typeMarkerWildcard.getUpperBounds()[0];
             if (!cls.isAssignableFrom(resolveClass(wildcardUpperBound))) {
-                throw new JSONDeserializerException("Determiner " + determiner.toGenericString() + " in "
-                        + cls.getCanonicalName()
-                        + " must return an upper bounded wildcard Class<? extends TYPE> or TypeMarker<? extends TYPE>, where TYPE is this interface or class or its subtypes. TYPE may also be parameterized.");
+                throw new JSONDeserializerException("Determiner" + System.lineSeparator() + System.lineSeparator()
+                        + determiner.toGenericString() + System.lineSeparator() + System.lineSeparator()
+                        + "must return Class<? extends TYPE> or TypeMarker<? extends TYPE> where TYPE is this type or a subtype.");
             }
         } else {
-            throw new JSONDeserializerException("Determiner " + determiner.toGenericString() + " in "
-                    + cls.getCanonicalName()
-                    + " must return TypeMarker<? extends TYPE>, Class<? extends TYPE>, TypeMarker<TYPE>, or Class< TYPE> where TYPE is this interface or class or its subtypes.");
+            throw new JSONDeserializerException("Determiner" + System.lineSeparator() + System.lineSeparator() 
+                    + determiner.toGenericString() + System.lineSeparator() + System.lineSeparator()
+                    + "must return TypeMarker<? extends TYPE>, Class<? extends TYPE>, TypeMarker<TYPE>, or Class<TYPE> where TYPE is this type or a subtype.");
         }
     }
 
@@ -220,33 +229,47 @@ final class JSONClassModel {
         Type[] clsTypeParameters = cls.getTypeParameters();
         int factoryMethodModifiers = factoryMethod.getModifiers();
         if (!Modifier.isStatic(factoryMethodModifiers)) {
-            throw new JSONDeserializerException("Factory method " + factoryMethod.toGenericString() + " in "
-                    + cls.getCanonicalName() + " must be static.");
+            throw new JSONDeserializerException("Factory method"
+                    + System.lineSeparator() + System.lineSeparator()
+                    + factoryMethod.toGenericString()
+                    + System.lineSeparator() + System.lineSeparator() + "must be static.");
         }
         if (factoryMethod.getTypeParameters().length != clsTypeParameters.length) {
-            throw new JSONDeserializerException("Factory method " + factoryMethod.toGenericString()
-                    + " must be a generic method with the same number of type parameters as its declaring class "
-                    + cls.getCanonicalName());
+            throw new JSONDeserializerException("Factory method" + System.lineSeparator() + System.lineSeparator()
+                    + factoryMethod.toGenericString() + System.lineSeparator() + System.lineSeparator()
+                    + "must be a generic method with the same number of type parameters as its declaring class:"
+                    + System.lineSeparator() + System.lineSeparator() + cls.toGenericString());
         }
         if (factoryMethod.getReturnType() != cls) {
-            throw new JSONDeserializerException(
-                    "Factory method " + factoryMethod.toGenericString() + " in " + cls.getCanonicalName()
-                    + " must return " + cls.getCanonicalName());
+            throw new JSONDeserializerException("Factory method"
+                    + System.lineSeparator() + System.lineSeparator()
+                    + factoryMethod.toGenericString()
+                    + "must return" + System.lineSeparator() + System.lineSeparator()
+                    + cls.getCanonicalName());
         }
         if (clsTypeParameters.length > 0) {
             if (!(factoryMethod.getGenericReturnType() instanceof ParameterizedType)) {
-                throw new JSONDeserializerException("Factory method " + factoryMethod.toGenericString() + " in "
-                        + cls.getCanonicalName()
-                        + " must not return a raw type since raw types are not supported.");
+                throw new JSONDeserializerException("Factory method"
+                        + System.lineSeparator() + System.lineSeparator() + factoryMethod.toGenericString()
+                        + System.lineSeparator() + System.lineSeparator()
+                        + "must not return a raw type since raw types are not supported.");
             }
             ParameterizedType factoryParameterizedReturnType = (ParameterizedType) factoryMethod.getGenericReturnType();
             if (!Arrays.equals(factoryParameterizedReturnType.getActualTypeArguments(), factoryMethod.getTypeParameters())) {
-                throw new JSONDeserializerException("Factory method " + factoryMethod.toGenericString() + " in "
-                        + cls.getCanonicalName()
-                        + " must return "
-                        + new ResolvedParameterizedType(null, cls, factoryMethod.getTypeParameters()).toString()
-                        + ".");
+                throw new JSONDeserializerException("Factory method" + System.lineSeparator() + System.lineSeparator()
+                        + factoryMethod.toGenericString() + System.lineSeparator() + System.lineSeparator()
+                        + "must return" + System.lineSeparator() + System.lineSeparator()
+                        + new ResolvedParameterizedType(null, cls, factoryMethod.getTypeParameters()).toString());
             }
+        }
+    }
+
+    private static void checkZeroTypeParameters(Executable executable) throws JSONDeserializerException {
+        if (executable.getTypeParameters().length != 0) {
+            throw new JSONDeserializerException("Could not invoke executable"
+                    + System.lineSeparator() + System.lineSeparator()
+                    + executable.toGenericString() + System.lineSeparator() + System.lineSeparator()
+                    + "since generic executables beyond factory methods are not supported for JSON serialization/deserialization.");
         }
     }
 }
