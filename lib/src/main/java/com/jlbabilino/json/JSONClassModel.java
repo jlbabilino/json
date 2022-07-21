@@ -88,11 +88,11 @@ final class JSONClassModel {
     }
 
     private static void collectClassModel(Class<?> cls, JSONClassModel classModel) {
-        for (Class<?> superInterface : cls.getInterfaces()) {
-            collectClassModel(superInterface, classModel);
-        }
-        collectClassModel(cls.getSuperclass(), classModel);
         if (cls != null && cls != Object.class) {
+            for (Class<?> superInterface : cls.getInterfaces()) {
+                collectClassModel(superInterface, classModel);
+            }
+            collectClassModel(cls.getSuperclass(), classModel);
             Field[] clsDeclaredFields = cls.getDeclaredFields();
             Method[] clsDeclaredMethods = cls.getDeclaredMethods();
             for (Field field : clsDeclaredFields) {
@@ -113,10 +113,10 @@ final class JSONClassModel {
                 }
             }
             for (Method clsMethod : clsDeclaredMethods) {
-                if (addMethodToModel(clsMethod, classModel.serializedJSONEntryMethods, SerializedJSONEntry.class)) break;
-                if (addMethodToModel(clsMethod, classModel.serializedJSONObjectValueMethods, SerializedJSONObjectValue.class)) break;
-                if (addMethodToModel(clsMethod, classModel.serializedJSONArrayItemMethods, SerializedJSONArrayItem.class)) break;
-                if (addMethodToModel(clsMethod, classModel.deserializedJSONTargetMethods, DeserializedJSONTarget.class)) break;
+                if (addMethodToModel(clsMethod, classModel.serializedJSONEntryMethods, SerializedJSONEntry.class)) continue;
+                if (addMethodToModel(clsMethod, classModel.serializedJSONObjectValueMethods, SerializedJSONObjectValue.class)) continue;
+                if (addMethodToModel(clsMethod, classModel.serializedJSONArrayItemMethods, SerializedJSONArrayItem.class)) continue;
+                if (addMethodToModel(clsMethod, classModel.deserializedJSONTargetMethods, DeserializedJSONTarget.class)) continue;
             }
         }
     }
@@ -162,6 +162,11 @@ final class JSONClassModel {
 
         Method getMethod() {
             return method;
+        }
+
+        @Override
+        public String toString() {
+            return annotation.toString() + " " + method.toGenericString();
         }
     }
 
