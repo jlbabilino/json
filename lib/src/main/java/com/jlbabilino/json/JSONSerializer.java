@@ -209,12 +209,18 @@ public final class JSONSerializer {
                                             + ", but this type serializes to JSON " + jsonType.name().toLowerCase()
                                             + ". A serialized JSON entry must match the JSON type serialized by this type.");
                                 }
-                            } catch (IllegalAccessException | InvocationTargetException e) {
+                            } catch (IllegalAccessException e) {
                                 throw new JSONSerializerException("Unable to access serialized method"
                                         + System.lineSeparator() + System.lineSeparator()
                                         + method.getMethod().toGenericString() + System.lineSeparator() + System.lineSeparator()
                                         + "with exception:" + System.lineSeparator() + System.lineSeparator()
                                         + e.getMessage());
+                            } catch (InvocationTargetException e) {
+                                throw new JSONSerializerException("Serialized method"
+                                        + System.lineSeparator() + System.lineSeparator()
+                                        + method.getMethod().toGenericString() + System.lineSeparator() + System.lineSeparator()
+                                        + "was succesfully invoked, but could not complete because it threw an exception:"
+                                        + System.lineSeparator() + System.lineSeparator() + e.getMessage());
                             }
                         }
                         switch (jsonType) {
@@ -238,12 +244,18 @@ public final class JSONSerializer {
                                     try {
                                         JSONEntry entryTest = serializeJSONEntry(method.getMethod().invoke(obj), classModelCache);
                                         objectMap.put(key, entryTest);
-                                    } catch (IllegalAccessException | InvocationTargetException e) {
+                                    } catch (IllegalAccessException e) {
                                         throw new JSONSerializerException("Unable to access serialized method"
                                                 + System.lineSeparator() + System.lineSeparator()
                                                 + method.getMethod().toGenericString() + System.lineSeparator() + System.lineSeparator()
                                                 + "with exception:" + System.lineSeparator() + System.lineSeparator()
                                                 + e.getMessage());
+                                    } catch (InvocationTargetException e) {
+                                        throw new JSONSerializerException("Serialized method"
+                                                + System.lineSeparator() + System.lineSeparator()
+                                                + method.getMethod().toGenericString() + System.lineSeparator() + System.lineSeparator()
+                                                + "was succesfully invoked, but could not complete because it threw an exception:"
+                                                + System.lineSeparator() + System.lineSeparator() + e.getMessage());
                                     }
                                 }
                                 entry = new JSONObject(objectMap);
@@ -258,7 +270,11 @@ public final class JSONSerializer {
                                         JSONEntry arrayEntry = serializeJSONEntry(field.get(obj), classModelCache);
                                         arrayEntries[index] = arrayEntry;
                                     } catch (IllegalAccessException e) {
-                                        
+                                        throw new JSONSerializerException("Unable to access serialized field"
+                                                + System.lineSeparator() + System.lineSeparator()
+                                                + field.toGenericString() + System.lineSeparator() + System.lineSeparator()
+                                                + "with exception:" + System.lineSeparator() + System.lineSeparator()
+                                                + e.getMessage());
                                     }
                                 }
                                 for (AnnotatedJSONMethod<SerializedJSONArrayItem> method : classModel.serializedJSONArrayItemMethodsUnmodifiable) {
@@ -266,14 +282,24 @@ public final class JSONSerializer {
                                     try {
                                         JSONEntry arrayEntry = serializeJSONEntry(method.getMethod().invoke(obj), classModelCache);
                                         arrayEntries[index] = arrayEntry;
-                                    } catch (IllegalAccessException | InvocationTargetException e) {
+                                    } catch (IllegalAccessException e) {
+                                        throw new JSONSerializerException("Unable to access serialized method"
+                                                + System.lineSeparator() + System.lineSeparator()
+                                                + method.getMethod().toGenericString() + System.lineSeparator() + System.lineSeparator()
+                                                + "with exception:" + System.lineSeparator() + System.lineSeparator()
+                                                + e.getMessage());
+                                    } catch (InvocationTargetException e) {
+                                        throw new JSONSerializerException("Serialized method"
+                                                + System.lineSeparator() + System.lineSeparator()
+                                                + method.getMethod().toGenericString() + System.lineSeparator() + System.lineSeparator()
+                                                + "was succesfully invoked, but could not complete because it threw an exception:"
+                                                + System.lineSeparator() + System.lineSeparator() + e.getMessage());
                                     }
                                 }
                                 entry = new JSONArray(arrayEntries);
                                 break;
                             default:
-                                entry = null;
-                                break;
+                                throw new JSONSerializerException("Internal error: class was not checked for at least one serialization annotation.");
                         }
                     }
                 }

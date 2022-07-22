@@ -309,7 +309,7 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
      */
     public static JSONArray of(JSONEntry... entries) throws NullPointerException {
         if (entries == null) {
-            throw new NullPointerException("Cannot instantiate a JSONArray with a null reference.");
+            throw new NullPointerException("Cannot instantiate a JSONArray with a null array of entries.");
         }
         for (JSONEntry entry : entries) {
             if (entry == null) {
@@ -317,25 +317,6 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
             }
         }
         return new JSONArray(entries);
-    }
-
-    /**
-     * Constructs a {@code JSONArray} from an array of objects by
-     * serializing each one.
-     * 
-     * @param entries the array of objects
-     * @return the JSON array
-     * @throws NullPointerException if the input array is null
-     */
-    public static JSONArray of(Object... entries) throws NullPointerException {
-        if (entries == null) {
-            throw new NullPointerException("Cannot instantiate a JSONArray with a null reference.");
-        }
-        JSONEntry[] jsonEntries = new JSONEntry[entries.length];
-        for (int i = 0; i < entries.length; i++) {
-            jsonEntries[i] = JSONSerializer.serializeJSONEntry(entries[i]);
-        }
-        return new JSONArray(jsonEntries);
     }
 
     @Override

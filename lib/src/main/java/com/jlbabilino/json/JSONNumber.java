@@ -146,7 +146,10 @@ public class JSONNumber extends JSONEntry {
         return number.toString();
     }
 
-    public static JSONNumber of(Number number) {
+    public static JSONNumber of(Number number) throws NullPointerException {
+        if (number == null) {
+            throw new NullPointerException("Cannot instantiate a JSONNumber with a null number.");
+        }
         return new JSONNumber(number);
     }
 

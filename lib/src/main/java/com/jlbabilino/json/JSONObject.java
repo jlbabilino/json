@@ -297,7 +297,18 @@ public class JSONObject extends JSONEntry {
         return str.toString();
     }
 
-    public static JSONObject of(Map<JSONString, JSONEntry> jsonObjectMap) {
+    public static JSONObject of(Map<JSONString, JSONEntry> jsonObjectMap) throws NullPointerException {
+        if (jsonObjectMap == null) {
+            throw new NullPointerException("Cannot instantiate a JSONObject with a null map of entries.");
+        }
+        if (jsonObjectMap.containsKey(null)) {
+            throw new NullPointerException("Cannot instantiate a JSONObject with a null key in the object map.");
+        }
+        for (Map.Entry<JSONString, JSONEntry> entry : jsonObjectMap.entrySet()) {
+            if (entry.getValue() == null) {
+                throw new NullPointerException("Cannot instantiate a JSONObject with a null value in the object map.");
+            }
+        }
         return new JSONObject(jsonObjectMap);
     }
 
