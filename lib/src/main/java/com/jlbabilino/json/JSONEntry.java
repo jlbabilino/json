@@ -145,7 +145,12 @@ public abstract class JSONEntry {
         /**
          * The {@code JSONType} for JSON nulls.
          */
-        NULL
+        NULL;
+
+        @Override
+        public String toString() {
+            return name().toLowerCase();
+        }
     }
 
     /**

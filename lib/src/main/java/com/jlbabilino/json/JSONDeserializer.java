@@ -34,6 +34,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +42,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.jlbabilino.json.JSONClassModel.AnnotatedJSONMethod;
+import com.jlbabilino.json.JSONClassModel.DeserializedClassModel;
 import com.jlbabilino.json.JSONEntry.JSONType;
 
 /**
@@ -101,7 +103,7 @@ public final class JSONDeserializer {
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     public static <T> T deserialize(JSON json, TypeMarker<T> typeMarker)
-            throws NullPointerException, IllegalArgumentException, JSONDeserializerException {
+            throws NullPointerException, IllegalArgumentException, InvalidJSONTranslationConfiguration, JSONDeserializerException {
         return deserialize(json.getRoot(), typeMarker);
     }
 
@@ -118,7 +120,7 @@ public final class JSONDeserializer {
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     public static <T> T deserialize(JSON json, Class<T> typeClass)
-            throws NullPointerException, JSONDeserializerException {
+            throws NullPointerException, InvalidJSONTranslationConfiguration, JSONDeserializerException {
         return deserialize(json.getRoot(), typeClass);
     }
 
@@ -138,7 +140,7 @@ public final class JSONDeserializer {
      * @throws JSONDeserializerException if there is an error while deserializing.
      */
     private static Object deserialize(JSONEntry jsonEntry, Type deserializedType, boolean searchForDeterminer)
-            throws NullPointerException, JSONDeserializerException {
+            throws NullPointerException, InvalidJSONTranslationConfiguration, JSONDeserializerException {
         if (jsonEntry == null) {
             throw new NullPointerException("The JSON entry being deserialized is null");
         }
@@ -177,13 +179,24 @@ public final class JSONDeserializer {
                 }
                 if (baseClass.isAnnotationPresent(JSONSerializable.class)) {
                     objectDeserialization: {
-                        JSONType classJSONType = baseClass.getAnnotation(JSONSerializable.class).rootType();
-                        if (jsonEntry.getType() != classJSONType) {
-                            throw new JSONDeserializerException(
-                                    "Could not deserialize because the type of JSON Entry provided does not match the JSON type specified by the class "
-                                            + baseClass.getCanonicalName() + ".");
+                        JSONType[] classJSONTypes = baseClass.getAnnotation(JSONDeserializable.class).value();
+                        boolean isJSONTypeSupported = false;
+                        for (JSONType classJSONType : classJSONTypes) {
+                            if (jsonEntry.getType() == classJSONType) {
+                                isJSONTypeSupported = true;
+                                break;
+                            }
                         }
-                        JSONClassModel classModel = JSONClassModel.of(baseClass);
+                        if (!isJSONTypeSupported) {
+                            String supportedJSONTypes = Arrays.toString(classJSONTypes);
+                            supportedJSONTypes = supportedJSONTypes.substring(1, supportedJSONTypes.length() - 1);
+                            throw new JSONDeserializerException(baseClass.toGenericString()
+                                    + System.lineSeparator() + System.lineSeparator()
+                                    + "supports deserialization from JSON types" + System.lineSeparator() + System.lineSeparator()
+                                    + supportedJSONTypes + System.lineSeparator() + System.lineSeparator()
+                                    + "but deserializing from JSON " + jsonEntry.getType() + " was attempted.");
+                        }
+                        DeserializedClassModel classModel = new DeserializedClassModel(baseClass);
                         objectInstantiation: {
                             if (searchForDeterminer && classModel.getDeterminer() != null) {
                                 Method determiner = classModel.getDeterminer();
@@ -238,12 +251,12 @@ public final class JSONDeserializer {
                                 }
                                 break objectInstantiation;
                             } catch (IllegalAccessException e) {
-                                throw new JSONDeserializerException("Could not invoke constructor "
-                                        + constructor.toString() + " in " + baseClass.getCanonicalName() + ".");
+                                throw new JSONDeserializerException("Could not invoke constructor:"
+                                        + System.lineSeparator() + System.lineSeparator() + constructor.toGenericString());
                             } catch (InvocationTargetException e) {
                                 throw new JSONDeserializerException("Unable to create instance of "
                                         + baseClass.getCanonicalName() + " with constructor "
-                                        + constructor.toString() + " since an exception was thrown in the constructor: "
+                                        + constructor.toGenericString() + " since an exception was thrown in the constructor: "
                                         + e.getCause().getMessage());
                             } catch (ExceptionInInitializerError e) {
                                 throw new JSONDeserializerException("Unable to create instance of "
@@ -263,13 +276,13 @@ public final class JSONDeserializer {
                             setField(field, deserializedObject, entry, typeVariableMap);
                         }
                         for (Field field : classModel.deserializedJSONObjectValueFieldsUnmodifiable) {
-                            if (classJSONType != JSONType.OBJECT) {
-                                throw new JSONDeserializerException("Cannot use \"DeserializedJSONObjectValue\" since"
-                                        + System.lineSeparator() + System.lineSeparator()
-                                        + baseClass.getCanonicalName()
-                                        + System.lineSeparator() + System.lineSeparator()
-                                        + " serializes to JSON " + classJSONType.name().toLowerCase() + ".");
-                            }
+                            // if (classJSONType != JSONType.OBJECT) { TODO: move this to DeserializedClassModel
+                            //     throw new JSONDeserializerException("Cannot use \"DeserializedJSONObjectValue\" since"
+                            //             + System.lineSeparator() + System.lineSeparator()
+                            //             + baseClass.getCanonicalName()
+                            //             + System.lineSeparator() + System.lineSeparator()
+                            //             + " serializes to JSON " + classJSONType.name().toLowerCase() + ".");
+                            // }
                             JSONObject jsonObject = (JSONObject) jsonEntry; // this was checked earlier
                             String key = field.getAnnotation(DeserializedJSONObjectValue.class).key();
                             if (!jsonObject.containsKey(key)) {
@@ -284,13 +297,13 @@ public final class JSONDeserializer {
                             setField(field, deserializedObject, entry, typeVariableMap);
                         }
                         for (Field field : classModel.deserializedJSONArrayItemFieldsUnmodifiable) {
-                            if (classJSONType != JSONType.ARRAY) {
-                                throw new JSONDeserializerException("Cannot use \"DeserializedJSONArrayItem\" since"
-                                        + System.lineSeparator() + System.lineSeparator()
-                                        + baseClass.getCanonicalName()
-                                        + System.lineSeparator() + System.lineSeparator()
-                                        + " serializes to JSON " + classJSONType.name().toLowerCase() + ".");
-                            }
+                            // if (classJSONType != JSONType.ARRAY) {
+                            //     throw new JSONDeserializerException("Cannot use \"DeserializedJSONArrayItem\" since"
+                            //             + System.lineSeparator() + System.lineSeparator()
+                            //             + baseClass.getCanonicalName()
+                            //             + System.lineSeparator() + System.lineSeparator()
+                            //             + " serializes to JSON " + classJSONType.name().toLowerCase() + ".");
+                            // }
                             JSONArray jsonArray = (JSONArray) jsonEntry;
                             int index = field.getAnnotation(DeserializedJSONArrayItem.class).index();
                             if (index < 0 || index >= jsonArray.length()) {
@@ -519,7 +532,7 @@ public final class JSONDeserializer {
     }
 
     private static void setField(Field field, Object deserializedObject,
-            JSONEntry entry, Map<TypeVariable<?>, Type> typeVariableMap) throws JSONDeserializerException {
+            JSONEntry entry, Map<TypeVariable<?>, Type> typeVariableMap) throws InvalidJSONTranslationConfiguration, JSONDeserializerException {
         Type resolvedType = resolveType(field.getGenericType(), typeVariableMap);
         Object newValue = deserialize(entry, resolvedType, true);
         try {
@@ -548,7 +561,7 @@ public final class JSONDeserializer {
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     private static <T> T deserialize(JSONEntry jsonEntry, TypeMarker<T> typeMarker, boolean searchForDeterminer)
-            throws NullPointerException, IllegalArgumentException, JSONDeserializerException {
+            throws NullPointerException, IllegalArgumentException, InvalidJSONTranslationConfiguration, JSONDeserializerException {
         if (typeMarker == null) {
             throw new NullPointerException("Type marker is null.");
         }
@@ -578,7 +591,7 @@ public final class JSONDeserializer {
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     public static <T> T deserialize(JSONEntry jsonEntry, TypeMarker<T> typeMarker)
-            throws NullPointerException, IllegalArgumentException, JSONDeserializerException {
+            throws NullPointerException, IllegalArgumentException, InvalidJSONTranslationConfiguration, JSONDeserializerException {
         return deserialize(jsonEntry, typeMarker, true);
     }
 
@@ -597,7 +610,7 @@ public final class JSONDeserializer {
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     private static <T> T deserialize(JSONEntry jsonEntry, Class<T> typeClass, boolean searchForDeterminer)
-            throws NullPointerException, JSONDeserializerException {
+            throws NullPointerException, InvalidJSONTranslationConfiguration, JSONDeserializerException {
         @SuppressWarnings("unchecked")
         T castObject = (T) deserialize(jsonEntry, (Type) typeClass, searchForDeterminer); // cast avoids ambiguity
         return castObject;
@@ -616,7 +629,7 @@ public final class JSONDeserializer {
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     public static <T> T deserialize(JSONEntry jsonEntry, Class<T> typeClass)
-            throws NullPointerException, JSONDeserializerException {
+            throws NullPointerException, InvalidJSONTranslationConfiguration, JSONDeserializerException {
         return deserialize(jsonEntry, typeClass, true);
     }
 
@@ -635,7 +648,7 @@ public final class JSONDeserializer {
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     public static <T> T deserialize(String jsonString, TypeMarker<T> typeMarker) throws
-            NullPointerException, IllegalArgumentException, JSONParserException, JSONDeserializerException {
+            NullPointerException, IllegalArgumentException, JSONParserException, InvalidJSONTranslationConfiguration, JSONDeserializerException {
         JSON json = JSONParser.parseJSON(jsonString);
         return deserialize(json, typeMarker);
     }
@@ -653,7 +666,7 @@ public final class JSONDeserializer {
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     public static <T> T deserialize(String jsonString, Class<T> typeClass) throws
-            NullPointerException, JSONParserException, JSONDeserializerException {
+            NullPointerException, JSONParserException, InvalidJSONTranslationConfiguration, JSONDeserializerException {
         JSON json = JSONParser.parseJSON(jsonString);
         return deserialize(json, typeClass);
     }
@@ -673,7 +686,7 @@ public final class JSONDeserializer {
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     public static <T> T deserialize(File jsonFile, TypeMarker<T> typeMarker) throws
-            NullPointerException, IllegalArgumentException, IOException, JSONParserException, JSONDeserializerException {
+            NullPointerException, IllegalArgumentException, IOException, JSONParserException, InvalidJSONTranslationConfiguration, JSONDeserializerException {
         JSON json = JSONParser.parseJSON(jsonFile);
         return deserialize(json, typeMarker);
     }
@@ -692,7 +705,7 @@ public final class JSONDeserializer {
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     public static <T> T deserialize(File jsonFile, Class<T> typeClass) throws
-            NullPointerException, IOException, JSONParserException, JSONDeserializerException {
+            NullPointerException, IOException, JSONParserException, InvalidJSONTranslationConfiguration, JSONDeserializerException {
         JSON json = JSONParser.parseJSON(jsonFile);
         return deserialize(json, typeClass);
     }
@@ -710,7 +723,7 @@ public final class JSONDeserializer {
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     private static Object[] prepareParameters(JSONEntry jsonEntry, Executable executable,
-            Map<TypeVariable<?>, Type> typeVariableMap) throws JSONDeserializerException {
+            Map<TypeVariable<?>, Type> typeVariableMap) throws InvalidJSONTranslationConfiguration, JSONDeserializerException {
         Class<?> executableClass = executable.getDeclaringClass();
         Parameter[] parameters = executable.getParameters();
         int parameterCount = executable.getParameterCount();
