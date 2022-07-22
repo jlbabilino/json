@@ -16,6 +16,7 @@
  */
 package com.jlbabilino.json;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -335,5 +336,22 @@ public class JSONArray extends JSONEntry implements Iterable<JSONEntry> {
             jsonEntries[i] = JSONSerializer.serializeJSONEntry(entries[i]);
         }
         return new JSONArray(jsonEntries);
+    }
+
+    @Override
+    public int hashCode() {
+        return getArray().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj instanceof JSONArray) {
+            return Arrays.equals(getArray(), ((JSONArray) obj).getArray());
+        } else {
+            return false;
+        }
     }
 }

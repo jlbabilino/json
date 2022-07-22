@@ -300,4 +300,21 @@ public class JSONObject extends JSONEntry {
     public static JSONObject of(Map<JSONString, JSONEntry> jsonObjectMap) {
         return new JSONObject(jsonObjectMap);
     }
+
+    @Override
+    public int hashCode() {
+        return getMap().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj instanceof JSONObject) {
+            return getMap().equals(((JSONObject) obj).getMap());
+        } else {
+            return false;
+        }
+    }
 }

@@ -25,8 +25,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation marks a type as being JSON serializable.
- * {@code JSONSerializer} checks for this annotation before serializing an
+ * This annotation marks a type as being JSON deserializable.
+ * {@code JSONDeserializer} checks for this annotation before serializing an
  * object.
  * 
  * @author Justin Babilino
@@ -34,14 +34,12 @@ import java.lang.annotation.Target;
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface JSONSerializable {
+public @interface JSONDeserializable {
 
     /**
-     * The JSON type that the object should be serialized to. This is
-     * usually a JSON object because it aligns with the structure of
-     * most Java classes.
+     * The list of JSON types that can be deserialized to this type.
      * 
-     * @return the type to serialize to
+     * @return the array of allowed JSON types
      */
-    public JSONType value();
+    public JSONType[] value();
 }

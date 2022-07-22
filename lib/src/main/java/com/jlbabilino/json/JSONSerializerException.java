@@ -16,32 +16,21 @@
  */
 package com.jlbabilino.json;
 
-import com.jlbabilino.json.JSONEntry.JSONType;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 /**
- * This annotation marks a type as being JSON serializable.
- * {@code JSONSerializer} checks for this annotation before serializing an
- * object.
+ * This exception is thrown by {@link JSONSerializer} if there is an error
+ * while serializing. It will provide a detailed message describing what the
+ * problem is and how to fix it.
  * 
+ * @see JSONSerializer
  * @author Justin Babilino
  */
-@Inherited
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface JSONSerializable {
-
+public class JSONSerializerException extends Exception {
     /**
-     * The JSON type that the object should be serialized to. This is
-     * usually a JSON object because it aligns with the structure of
-     * most Java classes.
+     * Creates a {@code JSONSerializerException} with a string error message.
      * 
-     * @return the type to serialize to
+     * @param message the error message
      */
-    public JSONType value();
+    public JSONSerializerException(String message) {
+        super(message);
+    }
 }

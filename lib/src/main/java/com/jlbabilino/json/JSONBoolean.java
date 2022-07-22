@@ -160,4 +160,21 @@ public class JSONBoolean extends JSONEntry {
      * the true JSON boolean value
      */
     public static final JSONBoolean TRUE = new JSONBoolean(true);
+
+    @Override
+    public int hashCode() {
+        return Boolean.hashCode(getBoolean());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj instanceof JSONBoolean) {
+            return getBoolean() == ((JSONBoolean) obj).getBoolean();
+        } else {
+            return false;
+        }
+    }
 }

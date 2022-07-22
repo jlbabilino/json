@@ -35,7 +35,7 @@ public class JSON {
      *
      * @param rootEntry the root <code>JSONEntry</code>
      */
-    public JSON(JSONEntry rootEntry) {
+    JSON(JSONEntry rootEntry) {
         this.rootEntry = rootEntry;
     }
 
@@ -68,6 +68,27 @@ public class JSON {
      */
     public JSONEntry getRoot() {
         return rootEntry;
+    }
+
+    public static JSON of(JSONEntry rootEntry) {
+        return new JSON(rootEntry);
+    }
+
+    @Override
+    public int hashCode() {
+        return rootEntry.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj instanceof JSON) {
+            return getRoot().equals(((JSON) obj).getRoot());
+        } else {
+            return false;
+        }
     }
 
     /**

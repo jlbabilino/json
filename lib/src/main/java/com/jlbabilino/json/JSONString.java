@@ -149,6 +149,10 @@ public class JSONString extends JSONEntry {
         return "\"" + string + "\"";
     }
 
+    public static JSONString of(String string) {
+        return new JSONString(string);
+    }
+
     @Override
     public int hashCode() {
         return string.hashCode();

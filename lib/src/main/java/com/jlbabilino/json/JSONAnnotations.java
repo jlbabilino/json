@@ -2,8 +2,14 @@ package com.jlbabilino.json;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Comparator;
 
 final class JSONAnnotations {
+
+    static final Comparator<SerializedJSONObjectValue> SERIALIZED_JSON_OBJECT_VALUE_COMPARATOR =
+            (annotation1, annotation2) -> annotation1.key().compareTo(annotation2.key());
+    static final Comparator<SerializedJSONArrayItem> SERIALIZED_JSON_ARRAY_ITEM_COMPARATOR =
+            (annotation1, annotation2) -> annotation1.index() - annotation2.index();
     
     private JSONAnnotations() {
     }

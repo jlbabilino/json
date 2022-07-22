@@ -146,6 +146,10 @@ public class JSONNumber extends JSONEntry {
         return number.toString();
     }
 
+    public static JSONNumber of(Number number) {
+        return new JSONNumber(number);
+    }
+
     /**
      * Checks if this JSON number is equal to another object. A JSON number
      * is equal to an object if it is of type {@code JSONNumber} and its
