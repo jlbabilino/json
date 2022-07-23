@@ -238,9 +238,9 @@ final class JSONClassModel {
                     }
                 }
             }
-            if (constructor == null) {
+            if (constructor == null && determiner == null) {
                 throw new InvalidJSONTranslationConfiguration(
-                        "Unable to locate a suitable constructor or factory method to instantiate type"
+                        "Unable to locate a suitable constructor, factory method, or determiner to instantiate type"
                         + System.lineSeparator() + System.lineSeparator() + cls.getCanonicalName());
             }
             collectDeserializableClassModel(cls);

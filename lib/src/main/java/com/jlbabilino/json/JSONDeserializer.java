@@ -54,7 +54,7 @@ import com.jlbabilino.json.JSONEntry.JSONType;
  * Java type must point to a Java type that this system is compatible with. This
  * includes most Java Collections and all primatives and wrapper classes. You
  * can create your own compatible objects by annotating a class with the
- * DeserializedJSON annotation family (see {@link JSONSerializable}).
+ * DeserializedJSON annotation family (see {@link JSONDeserializable}).
  * 
  * @see JSONSerializer
  * @author Justin Babilino
@@ -178,7 +178,7 @@ public final class JSONDeserializer {
                         typeVariableMap.put(classTypeParameters[i], actualTypeParameters[i]);
                     }
                 }
-                if (baseClass.isAnnotationPresent(JSONSerializable.class)) {
+                if (baseClass.isAnnotationPresent(JSONDeserializable.class)) {
                     objectDeserialization: {
                         JSONType[] classJSONTypes = baseClass.getAnnotation(JSONDeserializable.class).value();
                         boolean isJSONTypeSupported = false;
@@ -206,7 +206,7 @@ public final class JSONDeserializer {
                                 Method determiner = classModel.getDeterminer();
                                 try {
                                     Object[] arguments = prepareParameters(jsonEntry, determiner, typeVariableMap);
-                                    Object determinedType = determiner.invoke(arguments, jsonEntry);
+                                    Object determinedType = determiner.invoke(null, arguments);
                                     if (determinedType instanceof Class<?>) {
                                         deserializedObject = deserialize(jsonEntry, (Class<?>) determinedType, false);
                                         // ^ only part of code that uses false here, we need to make sure there isn't infinite recursion
