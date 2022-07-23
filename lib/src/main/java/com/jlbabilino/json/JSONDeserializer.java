@@ -16,6 +16,7 @@
  */
 package com.jlbabilino.json;
 
+import static com.jlbabilino.json.JSONNull.NULL;
 import static com.jlbabilino.json.ResolvedTypes.isResolved;
 import static com.jlbabilino.json.ResolvedTypes.resolveClass;
 import static com.jlbabilino.json.ResolvedTypes.resolveType;
@@ -139,7 +140,7 @@ public final class JSONDeserializer {
      *                                   {@code null}
      * @throws JSONDeserializerException if there is an error while deserializing.
      */
-    private static Object deserialize(JSONEntry jsonEntry, Type deserializedType, boolean searchForDeterminer)
+    private static Object deserialize(JSONEntry jsonEntry, Type deserializedType, boolean searchForDeterminer, Map<Class<?>, DeserializedClassModel> classModelCache)
             throws NullPointerException, InvalidJSONTranslationConfiguration, JSONDeserializerException {
         if (jsonEntry == null) {
             throw new NullPointerException("The JSON entry being deserialized is null");
@@ -166,7 +167,7 @@ public final class JSONDeserializer {
                 Object newArray = Array.newInstance(baseClass.getComponentType(), arrayLength);
                 Type genericComponentType = ((GenericArrayType) deserializedType).getGenericComponentType();
                 for (int i = 0; i < arrayLength; i++) {
-                    Array.set(newArray, i, deserialize(arrayEntries[i], genericComponentType, true));
+                    Array.set(newArray, i, deserialize(arrayEntries[i], genericComponentType, true, classModelCache));
                 }
                 deserializedObject = newArray;
             } else {
@@ -196,7 +197,10 @@ public final class JSONDeserializer {
                                     + supportedJSONTypes + System.lineSeparator() + System.lineSeparator()
                                     + "but deserializing from JSON " + jsonEntry.getType() + " was attempted.");
                         }
-                        DeserializedClassModel classModel = new DeserializedClassModel(baseClass);
+                        DeserializedClassModel classModel = classModelCache.get(baseClass);
+                        if (classModel == null) {
+                            classModel = new DeserializedClassModel(baseClass);
+                        }
                         objectInstantiation: {
                             if (searchForDeterminer && classModel.getDeterminer() != null) {
                                 Method determiner = classModel.getDeterminer();
@@ -273,7 +277,7 @@ public final class JSONDeserializer {
                         }
                         for (Field field : classModel.deserializedJSONEntryFieldsUnmodifiable) {
                             JSONEntry entry = jsonEntry;
-                            setField(field, deserializedObject, entry, typeVariableMap);
+                            setField(field, deserializedObject, entry, typeVariableMap, classModelCache);
                         }
                         for (Field field : classModel.deserializedJSONObjectValueFieldsUnmodifiable) {
                             // if (classJSONType != JSONType.OBJECT) { TODO: move this to DeserializedClassModel
@@ -294,7 +298,7 @@ public final class JSONDeserializer {
                                         + key + "\", but that key is unavailible in the JSON object.");
                             }
                             JSONEntry entry = jsonObject.get(key);
-                            setField(field, deserializedObject, entry, typeVariableMap);
+                            setField(field, deserializedObject, entry, typeVariableMap, classModelCache);
                         }
                         for (Field field : classModel.deserializedJSONArrayItemFieldsUnmodifiable) {
                             // if (classJSONType != JSONType.ARRAY) {
@@ -315,7 +319,7 @@ public final class JSONDeserializer {
                                         + index + ", but that index is out of bounds in the JSON array.");
                             }
                             JSONEntry entry = jsonArray.get(index);
-                            setField(field, deserializedObject, entry, typeVariableMap);
+                            setField(field, deserializedObject, entry, typeVariableMap, classModelCache);
                         }
                         for (AnnotatedJSONMethod<DeserializedJSONTarget> targetMethod : classModel.deserializedJSONTargetMethodsUnmodifiable) {
                             Object[] preparedParameters = prepareParameters(jsonEntry, targetMethod.getMethod(), typeVariableMap);
@@ -342,7 +346,7 @@ public final class JSONDeserializer {
                     Type listType = typeVariableMap.get(LIST_ELEMENT_TYPE_VARIABLE);
                     List<Object> newList = new ArrayList<>(arrayEntries.length);
                     for (JSONEntry arrayEntry : arrayEntries) {
-                        newList.add(deserialize(arrayEntry, listType, true));
+                        newList.add(deserialize(arrayEntry, listType, true, classModelCache));
                     }
                     deserializedObject = newList;
                 } else if (baseClass == Set.class) {
@@ -356,7 +360,7 @@ public final class JSONDeserializer {
                     Type setType = typeVariableMap.get(SET_ELEMENT_TYPE_VARIABLE);
                     Set<Object> newSet = new HashSet<>(arrayEntries.length);
                     for (JSONEntry arrayEntry : arrayEntries) {
-                        newSet.add(deserialize(arrayEntry, setType, true));
+                        newSet.add(deserialize(arrayEntry, setType, true, classModelCache));
                     }
                     deserializedObject = newSet;
                 } else if (baseClass == Map.class) {
@@ -372,8 +376,8 @@ public final class JSONDeserializer {
                     Map<Object, Object> newMap = new HashMap<>();
                     for (Map.Entry<JSONString, JSONEntry> mapEntry : objectMap.entrySet()) {
                         newMap.put(
-                                deserialize(mapEntry.getKey(), mapKeyType, true),
-                                deserialize(mapEntry.getValue(), mapValueType, true));
+                                deserialize(mapEntry.getKey(), mapKeyType, true, classModelCache),
+                                deserialize(mapEntry.getValue(), mapValueType, true, classModelCache));
                     }
                     deserializedObject = newMap;
                 } else if (baseClass.isArray()) {
@@ -523,18 +527,57 @@ public final class JSONDeserializer {
                         throw new JSONDeserializerException(
                                 "Cannot conver JSON " + jsonEntry.getType() + " to Enum value.");
                     }
+                } else if (baseClass == JSONEntry.class) {
+                    deserializedObject = jsonEntry;
+                } else if (baseClass == JSONObject.class) {
+                    try {
+                        deserializedObject = jsonEntry.asObject();
+                    } catch (JSONConversionException e) {
+                        throw new JSONDeserializerException("JSON conversion failed: " + e.getMessage());
+                    }
+                } else if (baseClass == JSONArray.class) {
+                    try {
+                        deserializedObject = jsonEntry.asArray();
+                    } catch (JSONConversionException e) {
+                        throw new JSONDeserializerException("JSON conversion failed: " + e.getMessage());
+                    }
+                } else if (baseClass == JSONBoolean.class) {
+                    try {
+                        deserializedObject = jsonEntry.asBoolean();
+                    } catch (JSONConversionException e) {
+                        throw new JSONDeserializerException("JSON conversion failed: " + e.getMessage());
+                    }
+                } else if (baseClass == JSONNumber.class) {
+                    try {
+                        deserializedObject = jsonEntry.asNumber();
+                    } catch (JSONConversionException e) {
+                        throw new JSONDeserializerException("JSON conversion failed: " + e.getMessage());
+                    }
+                } else if (baseClass == JSONString.class) {
+                    try {
+                        deserializedObject = jsonEntry.asString();
+                    } catch (JSONConversionException e) {
+                        throw new JSONDeserializerException("JSON conversion failed: " + e.getMessage());
+                    }
+                } else if (baseClass == JSONNull.class) {
+                    return NULL;
                 } else {
-                    deserializedObject = null;
+                    throw new JSONDeserializerException("Unable to deserialize");
                 }
             }
         }
         return deserializedObject;
     }
 
+    private static Object deserialize(JSONEntry jsonEntry, Type deserializedType, boolean searchForDeterminer)
+            throws NullPointerException, InvalidJSONTranslationConfiguration, JSONDeserializerException {
+        return deserialize(jsonEntry, deserializedType, searchForDeterminer, new HashMap<>());
+    }
+
     private static void setField(Field field, Object deserializedObject,
-            JSONEntry entry, Map<TypeVariable<?>, Type> typeVariableMap) throws InvalidJSONTranslationConfiguration, JSONDeserializerException {
+            JSONEntry entry, Map<TypeVariable<?>, Type> typeVariableMap, Map<Class<?>, DeserializedClassModel> classModelCache) throws InvalidJSONTranslationConfiguration, JSONDeserializerException {
         Type resolvedType = resolveType(field.getGenericType(), typeVariableMap);
-        Object newValue = deserialize(entry, resolvedType, true);
+        Object newValue = deserialize(entry, resolvedType, true, classModelCache);
         try {
             field.set(deserializedObject, newValue);
         } catch (IllegalAccessException e) {

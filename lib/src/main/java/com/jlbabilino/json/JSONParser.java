@@ -381,7 +381,7 @@ public class JSONParser {
         } while (isCharNumber(charAtIndex()));
         String numberString = jsonString.substring(beginIndex, index);
         Number number;
-        if (numberString.contains(".")) {
+        if (numberString.contains(".") || numberString.contains("e") || numberString.contains("E")) {
             try {
                 number = Double.parseDouble(numberString); // first try double then go to big decimal if doesn't work
             } catch (NumberFormatException doubleE) {

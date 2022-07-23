@@ -285,8 +285,8 @@ final class JSONClassModel {
             checkZeroTypeParameters(executable);
             for (Parameter parameter : executable.getParameters()) {
                 if (!parameter.isAnnotationPresent(DeserializedJSONEntry.class)
-                        || !parameter.isAnnotationPresent(DeserializedJSONObjectValue.class)
-                        || !parameter.isAnnotationPresent(DeserializedJSONArrayItem.class)) {
+                        && !parameter.isAnnotationPresent(DeserializedJSONObjectValue.class)
+                        && !parameter.isAnnotationPresent(DeserializedJSONArrayItem.class)) {
                     throw new InvalidJSONTranslationConfiguration("JSON Deserialized executable"
                             + System.lineSeparator() + System.lineSeparator()
                             + executable.toGenericString() + System.lineSeparator() + System.lineSeparator()

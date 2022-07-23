@@ -278,7 +278,7 @@ public class JSONObject extends JSONEntry {
         Iterator<Map.Entry<JSONString, JSONEntry>> setIterator = map.entrySet().iterator();
 
         Map.Entry<JSONString, JSONEntry> firstEntry = setIterator.next();
-        str.append("\"").append(firstEntry.getKey()).append("\": ") // add the first key
+        str.append(firstEntry.getKey()).append(": ") // add the first key
                 .append(firstEntry.getValue().toJSONText(indentLevel + 1, jsonFormat)); // add the first value
 
         setIterator.forEachRemaining(entry -> { // I use a lambda to avoid having to assign the next item over and over
@@ -300,9 +300,6 @@ public class JSONObject extends JSONEntry {
     public static JSONObject of(Map<JSONString, JSONEntry> jsonObjectMap) throws NullPointerException {
         if (jsonObjectMap == null) {
             throw new NullPointerException("Cannot instantiate a JSONObject with a null map of entries.");
-        }
-        if (jsonObjectMap.containsKey(null)) {
-            throw new NullPointerException("Cannot instantiate a JSONObject with a null key in the object map.");
         }
         for (Map.Entry<JSONString, JSONEntry> entry : jsonObjectMap.entrySet()) {
             if (entry.getValue() == null) {
