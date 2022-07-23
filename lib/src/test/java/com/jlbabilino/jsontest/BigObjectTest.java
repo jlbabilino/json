@@ -14,7 +14,7 @@ class BigObjectTest {
 
     @Test
     void serializeBigObject() {
-        int sampleCount = 100000; // be careful or you might run out of memory
+        int sampleCount = 1000; // be careful or you might run out of memory
         SamplePoint[] lotsOfSamples = new SamplePoint[sampleCount];
         for (int i = 0; i < lotsOfSamples.length; i++) {
             lotsOfSamples[i] = new SamplePoint(0, 0, 0, 0, 0, 0, 0);
