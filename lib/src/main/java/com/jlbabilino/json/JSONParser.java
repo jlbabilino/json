@@ -42,7 +42,7 @@ import java.util.Map;
  * @see JSONDeserializer
  * @author Justin Babilino
  */
-public class JSONParser {
+public final class JSONParser {
 
     /**
      * The {@code JSONEntry} where all parsed data is dumped to.
@@ -448,7 +448,7 @@ public class JSONParser {
      * @return {@code JSONNull.NULL}
      * @throws JSONParserException if the string does not contain "null"
      */
-    protected JSONEntry nullEntry() throws JSONParserException {
+    private JSONEntry nullEntry() throws JSONParserException {
         String nullString = jsonString.substring(index, index + 4);
         if (nullString.equals("null")) {
             index += 4;
