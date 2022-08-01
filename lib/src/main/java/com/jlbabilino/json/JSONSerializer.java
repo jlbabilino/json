@@ -227,7 +227,7 @@ public final class JSONSerializer {
                             case OBJECT:
                                 Map<JSONString, JSONEntry> objectMap = new HashMap<>();
                                 for (Field field : classModel.serializedJSONObjectValueFieldsUnmodifiable) {
-                                    JSONString key = new JSONString(field.getAnnotation(SerializedJSONObjectValue.class).key());
+                                    JSONString key = new JSONString(escapeString(field.getAnnotation(SerializedJSONObjectValue.class).key()));
                                     try {
                                         JSONEntry objectEntry = serializeJSONEntry(field.get(obj), classModelCache);
                                         objectMap.put(key, objectEntry);
@@ -240,7 +240,7 @@ public final class JSONSerializer {
                                     }
                                 }
                                 for (AnnotatedJSONMethod<SerializedJSONObjectValue> method : classModel.serializedJSONObjectValueMethodsUnmodifiable) {
-                                    JSONString key = new JSONString(method.getAnnotation().key());
+                                    JSONString key = new JSONString(escapeString(method.getAnnotation().key()));
                                     try {
                                         JSONEntry entryTest = serializeJSONEntry(method.getMethod().invoke(obj), classModelCache);
                                         objectMap.put(key, entryTest);
@@ -326,7 +326,7 @@ public final class JSONSerializer {
                     Object objMapKey = objMapEntry.getKey();
                     Object objMapValue = objMapEntry.getValue();
                     if (objMapKey != null && objMapValue != null) {
-                        JSONString key = new JSONString(objMapEntry.toString());
+                        JSONString key = new JSONString(escapeString(objMapEntry.toString()));
                         JSONEntry value = serializeJSONEntry(objMapValue, classModelCache);
                         objectMap.put(key, value);
                     }
@@ -363,7 +363,7 @@ public final class JSONSerializer {
                                     entry = serializeJSONEntry(methodReturnValue, classModelCache);
                                     break search;
                                 } else {
-                                    JSONString propertyName = new JSONString(methodName.substring(3));
+                                    JSONString propertyName = new JSONString(escapeString(methodName.substring(3)));
                                     objectMap.put(propertyName, serializeJSONEntry(methodReturnValue, classModelCache));
                                 }
                             } catch (IllegalAccessException | InvocationTargetException e) {

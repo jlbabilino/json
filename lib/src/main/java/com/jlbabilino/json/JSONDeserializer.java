@@ -504,14 +504,13 @@ public final class JSONDeserializer {
                     }
                 } else if (baseClass.isEnum()) {
                     if (jsonEntry.isString()) {
-                        String rawStr = ((JSONString) jsonEntry).getString();
-                        String reducedStr = rawStr.replace("_", "").replace("-", "").replace(" ", "").toLowerCase();
+                        String str = ((JSONString) jsonEntry).getString();
                         Enum<?>[] enumConstants = (Enum[]) baseClass.getEnumConstants();
                         Enum<?> foundEnum = null;
                         for (Enum<?> enumConstant : enumConstants) {
-                            String enumName = enumConstant.name().replace("_", "").replace("-", "").toLowerCase();
+                            String enumName = enumConstant.name();
                             String enumString = enumConstant.toString();
-                            if (reducedStr.equals(enumName) || rawStr.equals(enumString)) {
+                            if (str.equals(enumName) || str.equals(enumString)) {
                                 foundEnum = enumConstant;
                                 break;
                             }

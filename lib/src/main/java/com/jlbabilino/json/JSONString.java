@@ -153,7 +153,7 @@ public class JSONString extends JSONEntry {
         if (string == null) {
             throw new NullPointerException("Cannot instantiate a JSONString with a null string");
         }
-        return new JSONString(string);
+        return new JSONString(JSONSerializer.escapeString(string));
     }
 
     @Override
