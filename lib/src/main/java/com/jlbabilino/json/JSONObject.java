@@ -275,7 +275,9 @@ public class JSONObject extends JSONEntry {
             strBetweenItems = " ";
         }
 
-        Iterator<Map.Entry<JSONString, JSONEntry>> setIterator = map.entrySet().iterator();
+        // Iterator<Map.Entry<JSONString, JSONEntry>> setIterator = map.entrySet().iterator();
+        Iterator<Map.Entry<JSONString, JSONEntry>> setIterator = map.entrySet().stream().sorted(
+                (a, b) -> a.getKey().getString().compareTo(b.getKey().getString())).iterator();
 
         Map.Entry<JSONString, JSONEntry> firstEntry = setIterator.next();
         str.append(firstEntry.getKey()).append(": ") // add the first key
