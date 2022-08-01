@@ -92,12 +92,9 @@ public class JSONFormat {
     public static final int OBJECT_BEGIN_ON_NEWLINE_BIT = 0b100000000;
 
     /**
-     * The default format code, used internally. This is hidden from the
-     * implementation of this library because there should never be a time that the
-     * user would enter this. If a user wanted to export a JSON with the default
-     * format options, they could use the {@code toString} method instead.
+     * The default format code used when no format code is provided
      */
-    static final int DEFAULT_FORMAT_CODE = 0b010100100;
+    public static final int DEFAULT_FORMAT_CODE = 0b010100100;
 
     /**
      * Prevent instantiation
