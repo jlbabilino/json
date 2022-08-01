@@ -136,6 +136,8 @@ public final class JSONSerializer {
      * 
      * @param obj the object to serialize
      * @return the serialized {@code JSON}
+     * @throws InvalidJSONTranslationConfiguration if the serializable type has an invalid annotation configuration
+     * @throws JSONSerializerException if there is an error while serializing
      */
     public static JSON serializeJSON(Object obj) throws InvalidJSONTranslationConfiguration, JSONSerializerException {
         return new JSON(serializeJSONEntry(obj));
@@ -146,6 +148,8 @@ public final class JSONSerializer {
      * 
      * @param obj the object to serialize
      * @return the serialized {@code JSONEntry}
+     * @throws InvalidJSONTranslationConfiguration if the serializable type has an invalid annotation configuration
+     * @throws JSONSerializerException if there is an error while serializing
      */
     public static JSONEntry serializeJSONEntry(Object obj) throws InvalidJSONTranslationConfiguration, JSONSerializerException {
         return serializeJSONEntry(obj, new HashMap<>());
@@ -157,6 +161,8 @@ public final class JSONSerializer {
      * 
      * @param obj the object to serialize
      * @return the serialized {@code JSONEntry}
+     * @throws InvalidJSONTranslationConfiguration if the serializable type has an invalid annotation configuration
+     * @throws JSONSerializerException if there is an error while serializing
      */
     private static JSONEntry serializeJSONEntry(Object obj, Map<Class<?>, SerializedClassModel> classModelCache) throws InvalidJSONTranslationConfiguration, JSONSerializerException {
         JSONEntry entry;
@@ -385,6 +391,8 @@ public final class JSONSerializer {
      * 
      * @param obj the object to serialize
      * @return the serialized JSON string
+     * @throws InvalidJSONTranslationConfiguration if the serializable type has an invalid annotation configuration
+     * @throws JSONSerializerException if there is an error while serializing
      */
     public static String serializeString(Object obj) throws InvalidJSONTranslationConfiguration, JSONSerializerException {
         return serializeJSON(obj).exportJSON();
@@ -397,6 +405,8 @@ public final class JSONSerializer {
      * @param file the file to write the serialized data to
      * @throws NullPointerException if the file is null
      * @throws IOException if there is an error while writing the file
+     * @throws InvalidJSONTranslationConfiguration if the serializable type has an invalid annotation configuration
+     * @throws JSONSerializerException if there is an error while serializing
      */
     public static void serializeFile(Object obj, File file) throws NullPointerException, IOException, InvalidJSONTranslationConfiguration, JSONSerializerException  {
         if (file == null) {

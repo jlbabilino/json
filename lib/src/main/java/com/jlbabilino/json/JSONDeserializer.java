@@ -101,6 +101,7 @@ public final class JSONDeserializer {
      * @throws NullPointerException      if the JSON or type marker is {@code null}
      * @throws IllegalArgumentException  if the {@code TypeMarker} is not fully
      *                                   resolved (if it contains type variables)
+     * @throws InvalidJSONTranslationConfiguration if the deserializable type has an invalid annotation configuration
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     public static <T> T deserialize(JSON json, TypeMarker<T> typeMarker)
@@ -118,6 +119,7 @@ public final class JSONDeserializer {
      * @param typeClass the type of Java object to create
      * @return the newly created and populated Java object of type {@code <T>}
      * @throws NullPointerException      if the JSON or type class is {@code null}
+     * @throws InvalidJSONTranslationConfiguration if the deserializable type has an invalid annotation configuration
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     public static <T> T deserialize(JSON json, Class<T> typeClass)
@@ -138,6 +140,7 @@ public final class JSONDeserializer {
      * @return the newly created and populated Java object
      * @throws NullPointerException      if the JSON entry or {@code Type} is
      *                                   {@code null}
+     * @throws InvalidJSONTranslationConfiguration if the deserializable type has an invalid annotation configuration
      * @throws JSONDeserializerException if there is an error while deserializing.
      */
     private static Object deserialize(JSONEntry jsonEntry, Type deserializedType, boolean searchForDeterminer, Map<Class<?>, DeserializedClassModel> classModelCache)
@@ -600,6 +603,7 @@ public final class JSONDeserializer {
      * @throws NullPointerException      if the JSON or type marker is {@code null}
      * @throws IllegalArgumentException  if the {@code TypeMarker} is not fully
      *                                   resolved (if it contains type variables)
+     * @throws InvalidJSONTranslationConfiguration if the deserializable type has an invalid annotation configuration
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     private static <T> T deserialize(JSONEntry jsonEntry, TypeMarker<T> typeMarker, boolean searchForDeterminer)
@@ -630,6 +634,7 @@ public final class JSONDeserializer {
      * @throws NullPointerException      if the JSON or type marker is {@code null}
      * @throws IllegalArgumentException  if the {@code TypeMarker} is not fully
      *                                   resolved (if it contains type variables)
+     * @throws InvalidJSONTranslationConfiguration if the deserializable type has an invalid annotation configuration
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     public static <T> T deserialize(JSONEntry jsonEntry, TypeMarker<T> typeMarker)
@@ -649,6 +654,7 @@ public final class JSONDeserializer {
      * @param searchForDeterminer whether to search for a determiner rather than create an object
      * @return the newly created and populated Java object of type {@code <T>}
      * @throws NullPointerException      if the JSON or type class is {@code null}
+     * @throws InvalidJSONTranslationConfiguration if the deserializable type has an invalid annotation configuration
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     private static <T> T deserialize(JSONEntry jsonEntry, Class<T> typeClass, boolean searchForDeterminer)
@@ -668,6 +674,7 @@ public final class JSONDeserializer {
      * @param typeClass the type of Java object to create
      * @return the newly created and populated Java object of type {@code <T>}
      * @throws NullPointerException      if the JSON or type class is {@code null}
+     * @throws InvalidJSONTranslationConfiguration if the deserializable type has an invalid annotation configuration
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     public static <T> T deserialize(JSONEntry jsonEntry, Class<T> typeClass)
@@ -687,6 +694,7 @@ public final class JSONDeserializer {
      * @throws NullPointerException      if the string or type marker is null
      * @throws IllegalArgumentException  if the type marker contains an unresolved type variable
      * @throws JSONParserException       if there is a syntax error in the JSON in the string
+     * @throws InvalidJSONTranslationConfiguration if the deserializable type has an invalid annotation configuration
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     public static <T> T deserialize(String jsonString, TypeMarker<T> typeMarker) throws
@@ -705,6 +713,7 @@ public final class JSONDeserializer {
      * @return the newly created and populated Java object of type T
      * @throws NullPointerException      if the string or type marker is null
      * @throws JSONParserException       if there is a syntax error in the JSON in the string
+     * @throws InvalidJSONTranslationConfiguration if the deserializable type has an invalid annotation configuration
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     public static <T> T deserialize(String jsonString, Class<T> typeClass) throws
@@ -725,6 +734,7 @@ public final class JSONDeserializer {
      * @throws IllegalArgumentException  if the type marker contains an unresolved type variable
      * @throws IOException               if there is an error when reading the file
      * @throws JSONParserException       if there is a syntax error in the JSON in the file
+     * @throws InvalidJSONTranslationConfiguration if the deserializable type has an invalid annotation configuration
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     public static <T> T deserialize(File jsonFile, TypeMarker<T> typeMarker) throws
@@ -744,6 +754,7 @@ public final class JSONDeserializer {
      * @throws NullPointerException      if the file or type marker is null
      * @throws IOException               if there is an error when reading the file
      * @throws JSONParserException       if there is a syntax error in the JSON in the file
+     * @throws InvalidJSONTranslationConfiguration if the deserializable type has an invalid annotation configuration
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     public static <T> T deserialize(File jsonFile, Class<T> typeClass) throws
@@ -762,6 +773,7 @@ public final class JSONDeserializer {
      * @param typeVariableMap the table that connects type variables to resolved
      *                        types
      * @return the prepared parameters as an array of Objects
+     * @throws InvalidJSONTranslationConfiguration if the deserializable type has an invalid annotation configuration
      * @throws JSONDeserializerException if there is an error while deserializing
      */
     private static Object[] prepareParameters(JSONEntry jsonEntry, Executable executable,

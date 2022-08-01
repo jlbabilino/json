@@ -149,6 +149,13 @@ public class JSONString extends JSONEntry {
         return "\"" + string + "\"";
     }
 
+    /**
+     * Creates a {@code JSONString} given a {@code String}.
+     * 
+     * @param string the string
+     * @return a {@code JSONString} wrapping the string
+     * @throws NullPointerException if the string is {@code null}
+     */
     public static JSONString of(String string) throws NullPointerException {
         if (string == null) {
             throw new NullPointerException("Cannot instantiate a JSONString with a null string");

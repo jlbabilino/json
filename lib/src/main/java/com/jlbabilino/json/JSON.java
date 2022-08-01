@@ -70,7 +70,17 @@ public class JSON {
         return rootEntry;
     }
 
-    public static JSON of(JSONEntry rootEntry) {
+    /**
+     * Creates a {@code JSON} given a root entry.
+     * 
+     * @param rootEntry the root entry
+     * @return a {@code JSON} wrapping the root entry
+     * @throws NullPointerException if the root entry is {@code null}
+     */
+    public static JSON of(JSONEntry rootEntry) throws NullPointerException {
+        if (rootEntry == null) {
+            throw new NullPointerException("Cannot instantiate a JSON with a null root entry.");
+        }
         return new JSON(rootEntry);
     }
 

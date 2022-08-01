@@ -16,6 +16,7 @@
  */
 package com.jlbabilino.json;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -299,6 +300,13 @@ public class JSONObject extends JSONEntry {
         return str.toString();
     }
 
+    /**
+     * Creates a {@code JSONObject} given a {@code Map} of key-value pairs.
+     * 
+     * @param jsonObjectMap the map from {@code JSONString} keys to {@code JSONEntry} values
+     * @return a {@code JSONObject} wrapping a copy of the map
+     * @throws NullPointerException if the map or a value in it is {@code null}
+     */
     public static JSONObject of(Map<JSONString, JSONEntry> jsonObjectMap) throws NullPointerException {
         if (jsonObjectMap == null) {
             throw new NullPointerException("Cannot instantiate a JSONObject with a null map of entries.");
@@ -308,7 +316,7 @@ public class JSONObject extends JSONEntry {
                 throw new NullPointerException("Cannot instantiate a JSONObject with a null value in the object map.");
             }
         }
-        return new JSONObject(jsonObjectMap);
+        return new JSONObject(new HashMap<>(jsonObjectMap));
     }
 
     @Override
