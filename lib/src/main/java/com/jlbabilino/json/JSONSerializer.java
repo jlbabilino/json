@@ -332,7 +332,7 @@ public final class JSONSerializer {
                     Object objMapKey = objMapEntry.getKey();
                     Object objMapValue = objMapEntry.getValue();
                     if (objMapKey != null && objMapValue != null) {
-                        JSONString key = new JSONString(escapeString(objMapEntry.toString()));
+                        JSONString key = new JSONString(escapeString(objMapKey.toString()));
                         JSONEntry value = serializeJSONEntry(objMapValue, classModelCache);
                         objectMap.put(key, value);
                     }
