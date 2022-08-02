@@ -54,8 +54,9 @@ final class ResolvedTypes {
      * 
      * @param type the type to be resolved to a {@code Class}
      * @return the resolved {@code Class}
+     * @throws IllegalArgumentException if {@code type} is not fully resolved
      */
-    static Class<?> resolveClass(Type type) {
+    static Class<?> resolveClass(Type type) throws IllegalArgumentException {
         Class<?> resolvedClass;
         if (type instanceof GenericArrayType) {
             Class<?> componentType = resolveClass(((GenericArrayType) type).getGenericComponentType());
@@ -71,9 +72,8 @@ final class ResolvedTypes {
         } else if (type instanceof Class<?>) {
             resolvedClass = (Class<?>) type;
         } else {
-            // there's no sense throwing an exception because this isn't a public method
-            // this code will NEVER excecute, but is needed for compile checks
-            resolvedClass = null;
+            // this code should NEVER excecute, but is needed for compile checks
+            throw new IllegalArgumentException("Internal error: attempted to resolve the class of an unresolved type.");
         }
         return resolvedClass;
     }

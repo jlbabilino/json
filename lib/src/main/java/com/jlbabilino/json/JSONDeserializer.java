@@ -209,20 +209,31 @@ public final class JSONDeserializer {
                                 Method determiner = classModel.getDeterminer();
                                 try {
                                     Object[] arguments = prepareParameters(jsonEntry, determiner, typeVariableMap);
-                                    Object determinedType = determiner.invoke(null, arguments);
-                                    if (determinedType instanceof Class<?>) {
-                                        deserializedObject = deserialize(jsonEntry, (Class<?>) determinedType, false);
-                                        // ^ only part of code that uses false here, we need to make sure there isn't infinite recursion
-                                        break objectDeserialization;
-                                    } else if (determinedType instanceof TypeMarker<?>) {
-                                        deserializedObject = deserialize(jsonEntry, (TypeMarker<?>) determinedType, false);
+                                    Object determinerResult = determiner.invoke(null, arguments);
+                                    Class<?> determinedClass;
+                                    Type determinedType;
+                                    if (determinerResult instanceof Class<?>) {
+                                        determinedClass = (Class<?>) determinerResult;
+                                        determinedType = determinedClass;
+                                    } else if (determinerResult instanceof TypeMarker<?>) {
+                                        Type typeMarkerType = typeMarkerToType((TypeMarker<?>) determinerResult);
+                                        if (!isResolved(typeMarkerType)) {
+                                            throw new JSONDeserializerException(
+                                                    "The Type Marker provided is not completely resolved. Please remove all type variables from the declaration of the TypeMarker.");
+                                        }
+                                        determinedType = typeMarkerType;
+                                        determinedClass = resolveClass(determinedType);
                                     } else {
-                                        // must be null
+                                        // determinerResult must be null
                                         throw new JSONDeserializerException("Determiner"
                                                 + System.lineSeparator() + System.lineSeparator()
                                                 + determiner.toGenericString() + System.lineSeparator() + System.lineSeparator()
                                                 + "returned a null value. This is not allowed.");
                                     }
+                                    deserializedObject = deserialize(jsonEntry, determinedType, determinedClass != baseClass);
+                                    // ^ only part of code that uses anything other than true here,
+                                    // we need to make sure there isn't infinite recursion
+                                    break objectDeserialization;
                                 } catch (IllegalAccessException e) {
                                     throw new JSONDeserializerException("Could not invoke determiner"
                                             + System.lineSeparator() + System.lineSeparator()
