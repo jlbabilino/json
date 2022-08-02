@@ -281,8 +281,7 @@ final class JSONClassModel {
             return addMethodToModel(clsMethod, superMethods, targetAnnotationClass, DeserializedClassModel::checkDeserializedExecutableConditions);
         }
 
-        private static void checkDeserializedExecutableConditions(Executable executable) throws InvalidJSONTranslationConfiguration {
-            checkZeroTypeParameters(executable);
+        private static void checkDeserializedExecutableParameterConditions(Executable executable) throws InvalidJSONTranslationConfiguration {
             for (Parameter parameter : executable.getParameters()) {
                 if (!parameter.isAnnotationPresent(DeserializedJSONEntry.class)
                         && !parameter.isAnnotationPresent(DeserializedJSONObjectValue.class)
@@ -294,6 +293,10 @@ final class JSONClassModel {
                             + "\", which does not use any JSON deserializer annotations. Please annotate it with at least one of the following annotations: @DeserializedJSONEntry, @DeserializedJSONObjectValue, or @DeserializedJSONArrayItem.");
                 }
             }
+        }
+        private static void checkDeserializedExecutableConditions(Executable executable) throws InvalidJSONTranslationConfiguration {
+            checkZeroTypeParameters(executable);
+            checkDeserializedExecutableParameterConditions(executable);
         }
 
         private static void checkDeterminerConditions(Method determiner) throws InvalidJSONTranslationConfiguration {
@@ -357,7 +360,7 @@ final class JSONClassModel {
         }
 
         private static void checkFactoryMethodConditions(Method factoryMethod) throws InvalidJSONTranslationConfiguration {
-            checkDeserializedExecutableConditions(factoryMethod);
+            checkDeserializedExecutableParameterConditions(factoryMethod);
             Class<?> cls = factoryMethod.getDeclaringClass();
             Type[] clsTypeParameters = cls.getTypeParameters();
             int factoryMethodModifiers = factoryMethod.getModifiers();
